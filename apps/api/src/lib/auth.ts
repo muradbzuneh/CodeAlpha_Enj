@@ -3,7 +3,7 @@ import { prismaAdapter } from "better-auth/adapters/prisma";
 
 import { prisma } from "./prisma.js";
 
-console.log("BETTER_AUTH_URL:", process.env.BETTER_AUTH_URL);
+
 export const auth = betterAuth({
   
   database: prismaAdapter(prisma, {
