@@ -4,6 +4,14 @@ dist
 dist-ssr
 *.local
 .env
+.env.*
+!.env.example
+
+generated/
+
+.DS_Store
+*.log
+.env
 .nitro
 .tanstack
 .wrangler
@@ -11,3 +19,18 @@ dist-ssr
 .vinxi
 __unconfig*
 todos.json
+
+/src/generated/prisma
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+
+# Prisma
+*.db

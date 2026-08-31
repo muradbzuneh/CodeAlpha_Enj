@@ -6,3 +6,30 @@ services:
     container_name: enj-api
     ports:
       - "4000:4000"
+    environment:
+      PORT: 4000
+      DATABASE_URL: postgresql://enj_user:enj_password@db:5432/enj_db
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: postgres:17
+    container_name: enj-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: enj_user
+      POSTGRES_PASSWORD: enj_password
+      POSTGRES_DB: enj_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - enj_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U enj_user -d enj_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  enj_postgres_data:

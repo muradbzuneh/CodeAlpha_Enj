@@ -1,21 +1,44 @@
-import express from 'express';
-import cors from 'cors';
-const app = express();
+import cors from "cors";
+import express from "express";
+import { toNodeHandler } from "better-auth/node";
+
+import { auth } from "./lib/auth.js";
+import { prisma } from "./lib/prisma.js";
+
+export const app = express();
 
 app.use(
   cors({
-    origin: 'http://localhost:4000',
+    origin: "http://localhost:3000",
     credentials: true,
-  })
-)
+  }),
+);
+
+app.all("/api/auth/*splat", toNodeHandler(auth));
+
 app.use(express.json());
 
-app.get("/api/health", (req, res) => {
+app.get("/api/health", (_req, res) => {
   res.json({
-    status: "OK",
-    app: "enj API"
-  })
+    status: "ok",
+    app: "Enj API",
+  });
 });
 
+app.get("/api/health/db", async (_req, res) => {
+  try {
+    await prisma.$queryRaw`SELECT 1`;
 
-export default app;
+    res.json({
+      status: "ok",
+      database: "connected",
+    });
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      status: "error",
+      database: "disconnected",
+    });
+  }
+});
