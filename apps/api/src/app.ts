@@ -1,9 +1,8 @@
 import cors from "cors";
 import { getSession } from "./lib/session.js";
 import express from "express";
-import { toNodeHandler } from "better-auth/node";
 import { requireAuth } from "./middleware/require.auth.js";
-
+import { postRouter } from "./routes/post.routes.js";
 import { auth } from "./lib/auth.js";
 import { prisma } from "./lib/prisma.js";
 
@@ -16,7 +15,8 @@ app.use(
   }),
 );
 
-app.all("/api/auth/*splat", toNodeHandler(auth));
+app.use(express.json());
+
 app.get("/api/me", async (req, res) => {
   try {
     const session = await getSession(req);
@@ -55,7 +55,6 @@ app.get("/api/profile", requireAuth, (req, res) => {
     user: session.user,
   });
 });
-app.use(express.json());
 
 app.get("/api/health", (_req, res) => {
   res.json({
@@ -63,6 +62,8 @@ app.get("/api/health", (_req, res) => {
     app: "Enj API",
   });
 });
+
+app.use("/api/posts", postRouter);
 
 app.get("/api/health/db", async (_req, res) => {
   try {

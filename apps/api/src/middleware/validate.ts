@@ -9,7 +9,7 @@ export function validateBody(schema: ZodType) {
       return res.status(400).json({
         status: "error",
         message: "Validation failed",
-        details: result.error.issues,
+        errors: result.error.flatten(),
       });
     }
 
