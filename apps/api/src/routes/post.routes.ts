@@ -8,7 +8,7 @@ import {
   updatePost,
 } from "../controllers/post.controller.js";
 
-import { requireAuth } from "../middleware/require.auth.js";
+import { requireAuth } from "../middleware/require-auth.js";
 import { validateBody } from "../middleware/validate.js";
 
 import {

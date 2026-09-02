@@ -1,7 +1,9 @@
 import cors from "cors";
 import { getSession } from "./lib/session.js";
 import express from "express";
-import { requireAuth } from "./middleware/require.auth.js";
+import { commentRouter } from "./routes/comment.routes.js";
+import { requireAuth } from "./middleware/require-auth.js";
+import { likeRouter } from "./routes/like.routes.js";
 import { postRouter } from "./routes/post.routes.js";
 import { auth } from "./lib/auth.js";
 import { prisma } from "./lib/prisma.js";
@@ -45,7 +47,8 @@ app.get("/api/me", async (req, res) => {
     });
   }
 });
-
+app.use("/api", commentRouter);
+app.use("/api", likeRouter);
 app.get("/api/profile", requireAuth, (req, res) => {
   const session = res.locals.session;
 
