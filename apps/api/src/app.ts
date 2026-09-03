@@ -8,6 +8,7 @@ import { postRouter } from "./routes/post.routes.js";
 import { auth } from "./lib/auth.js";
 import { prisma } from "./lib/prisma.js";
 import { profileRouter } from "./routes/profile.routes.js";
+import { feedRouter } from "./routes/feed.routes.js";
 import { followRouter } from "./routes/follow.routes.js";
 export const app = express();
 
@@ -51,6 +52,7 @@ app.get("/api/me", async (req, res) => {
 app.use("/api", commentRouter);
 app.use("/api", followRouter);
 app.use("/api", profileRouter);
+app.use("/api/feed", feedRouter);
 app.use("/api", likeRouter);
 app.get("/api/profile", requireAuth, (req, res) => {
   const session = res.locals.session;
