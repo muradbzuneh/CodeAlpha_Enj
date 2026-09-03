@@ -1,7 +1,7 @@
-import { app } from './app.ts';
-import { createServer } from 'http';
-import { auth } from './lib/auth.ts';
-import { toNodeHandler } from 'better-auth/node';
+import { createServer } from "http";
+import { app } from "./app.js";
+import { auth } from "./lib/auth.js";
+import { toNodeHandler } from "better-auth/node";
 
 const authHandler = toNodeHandler(auth);
 
@@ -21,12 +21,12 @@ const server = createServer(async (req, res) => {
   }
 });
 
-process.on('uncaughtException', (err) => {
-  console.error('Uncaught exception:', err);
+process.on("uncaughtException", (err) => {
+  console.error("Uncaught exception:", err);
 });
 
-process.on('unhandledRejection', (err) => {
-  console.error('Unhandled rejection:', err);
+process.on("unhandledRejection", (err) => {
+  console.error("Unhandled rejection:", err);
 });
 
 server.listen(4001, () => {

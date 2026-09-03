@@ -2,6 +2,17 @@ import type { NextFunction, Request, Response } from "express";
 
 import { getSession } from "../lib/session.js";
 
+import { z } from "zod";
+
+export const userIdSchema = z.object({
+  userId: z.string().min(1, "User id is required"),
+});
+
+export const profileQuerySchema = z.object({
+  page: z.coerce.number().int().positive().default(1),
+  limit: z.coerce.number().int().positive().max(50).default(20),
+});
+
 export async function requireAuth(
   req: Request,
   res: Response,

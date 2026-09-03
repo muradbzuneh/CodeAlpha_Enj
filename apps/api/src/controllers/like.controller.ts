@@ -4,7 +4,7 @@ import { prisma } from "../lib/prisma.js";
 export async function likePost(req: Request, res: Response) {
   try {
     const user = res.locals.session.user;
-    const { postId } = req.params;
+    const postId = req.params.postId as string;
 
     if (!postId) {
       return res.status(400).json({
@@ -69,7 +69,7 @@ export async function likePost(req: Request, res: Response) {
 export async function unlikePost(req: Request, res: Response) {
   try {
     const user = res.locals.session.user;
-    const { postId } = req.params;
+    const postId = req.params.postId as string;
 
     if (!postId) {
       return res.status(400).json({
@@ -113,7 +113,7 @@ export async function unlikePost(req: Request, res: Response) {
 
 export async function getPostLikes(req: Request, res: Response) {
   try {
-    const { postId } = req.params;
+    const postId = req.params.postId as string;
 
     if (!postId) {
       return res.status(400).json({
