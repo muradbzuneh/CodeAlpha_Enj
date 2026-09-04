@@ -54,15 +54,6 @@ app.use("/api", followRouter);
 app.use("/api", profileRouter);
 app.use("/api/feed", feedRouter);
 app.use("/api", likeRouter);
-app.get("/api/profile", requireAuth, (req, res) => {
-  const session = res.locals.session;
-
-  return res.json({
-    status: "ok",
-    message: "You are authenticated",
-    user: session.user,
-  });
-});
 
 app.get("/api/health", (_req, res) => {
   res.json({

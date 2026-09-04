@@ -10,6 +10,8 @@ datasource db {
 model User {
   id            String    @id
   name          String
+  username      String
+  bio           String?
   email         String
   emailVerified Boolean   @default(false)
   image         String?
@@ -26,6 +28,8 @@ model User {
   following Follow[] @relation("UserFollowing")
 
   @@unique([email])
+  @@unique([username])
+  @@index([username])
   @@map("user")
 }
 
