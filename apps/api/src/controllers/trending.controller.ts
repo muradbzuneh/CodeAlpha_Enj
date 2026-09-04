@@ -31,40 +31,34 @@ export async function getTrendingPosts(req: Request, res: Response) {
     const { page, limit } = parsed.data;
     const offset = (page - 1) * limit;
 
-    // Use raw SQL for the ranking query to avoid N+1 and keep computation in the DB
-    const trendingQuery = `
-      SELECT
-        p.id,
-        p.content,
-        p."createdAt",
-        p."updatedAt",
-        p."authorId",
-        (
-          (COALESCE(lc.like_count, 0) * 3.0)
-          + (COALESCE(cc.comment_count, 0) * 2.0)
-          + (10.0 * EXP(-EXTRACT(EPOCH FROM (NOW() - p."createdAt")) / (7.0 * 86400.0)))
-        ) AS score
-      FROM "post" p
-      LEFT JOIN (
-        SELECT "postId", COUNT(*)::int AS like_count
-        FROM "like"
-        GROUP BY "postId"
-      ) lc ON lc."postId" = p.id
-      LEFT JOIN (
-        SELECT "postId", COUNT(*)::int AS comment_count
-        FROM "comment"
-        GROUP BY "postId"
-      ) cc ON cc."postId" = p.id
-      ORDER BY score DESC
-      LIMIT ${limit} OFFSET ${offset}
-    `;
-
-    const countQuery = `
-      SELECT COUNT(*)::int AS total FROM "post"
-    `;
-
+    // Use $queryRaw tagged template for automatic parameterization (no SQL injection)
     const [posts, countResult] = await Promise.all([
-      prisma.$queryRawUnsafe(trendingQuery) as Promise<
+      prisma.$queryRaw`
+        SELECT
+          p.id,
+          p.content,
+          p."createdAt",
+          p."updatedAt",
+          p."authorId",
+          (
+            (COALESCE(lc.like_count, 0) * 3.0)
+            + (COALESCE(cc.comment_count, 0) * 2.0)
+            + (10.0 * EXP(-EXTRACT(EPOCH FROM (NOW() - p."createdAt")) / (7.0 * 86400.0)))
+          ) AS score
+        FROM "post" p
+        LEFT JOIN (
+          SELECT "postId", COUNT(*)::int AS like_count
+          FROM "like"
+          GROUP BY "postId"
+        ) lc ON lc."postId" = p.id
+        LEFT JOIN (
+          SELECT "postId", COUNT(*)::int AS comment_count
+          FROM "comment"
+          GROUP BY "postId"
+        ) cc ON cc."postId" = p.id
+        ORDER BY score DESC
+        LIMIT ${limit} OFFSET ${offset}
+      ` as Promise<
         Array<{
           id: string;
           content: string;
@@ -74,7 +68,9 @@ export async function getTrendingPosts(req: Request, res: Response) {
           score: number;
         }>
       >,
-      prisma.$queryRawUnsafe(countQuery) as Promise<Array<{ total: number }>>,
+      prisma.$queryRaw`SELECT COUNT(*)::int AS total FROM "post"` as Promise<
+        Array<{ total: number }>
+      >,
     ]);
 
     const total = countResult[0]?.total ?? 0;
