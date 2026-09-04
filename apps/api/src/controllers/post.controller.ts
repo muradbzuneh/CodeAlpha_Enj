@@ -21,6 +21,7 @@ export async function createPost(req: Request, res: Response) {
           select: {
             id: true,
             name: true,
+            username: true,
             email: true,
             image: true,
           },
@@ -79,6 +80,7 @@ export async function getPosts(req: Request, res: Response) {
             select: {
               id: true,
               name: true,
+              username: true,
               image: true,
             },
           },
@@ -142,6 +144,7 @@ export async function getPostById(req: Request, res: Response) {
           select: {
             id: true,
             name: true,
+            username: true,
             image: true,
           },
         },
@@ -156,6 +159,7 @@ export async function getPostById(req: Request, res: Response) {
               select: {
                 id: true,
                 name: true,
+                username: true,
                 image: true,
               },
             },
@@ -244,6 +248,7 @@ export async function updatePost(req: Request, res: Response) {
           select: {
             id: true,
             name: true,
+            username: true,
             image: true,
           },
         },

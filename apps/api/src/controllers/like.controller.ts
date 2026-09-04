@@ -152,6 +152,7 @@ export async function getPostLikes(req: Request, res: Response) {
           select: {
             id: true,
             name: true,
+            username: true,
             image: true,
           },
         },

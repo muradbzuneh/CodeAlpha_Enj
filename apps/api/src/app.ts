@@ -2,10 +2,8 @@ import cors from "cors";
 import { getSession } from "./lib/session.js";
 import express from "express";
 import { commentRouter } from "./routes/comment.routes.js";
-import { requireAuth } from "./middleware/require-auth.js";
 import { likeRouter } from "./routes/like.routes.js";
 import { postRouter } from "./routes/post.routes.js";
-import { auth } from "./lib/auth.js";
 import { prisma } from "./lib/prisma.js";
 import { profileRouter } from "./routes/profile.routes.js";
 import { feedRouter } from "./routes/feed.routes.js";
@@ -54,15 +52,6 @@ app.use("/api", followRouter);
 app.use("/api", profileRouter);
 app.use("/api/feed", feedRouter);
 app.use("/api", likeRouter);
-app.get("/api/profile", requireAuth, (req, res) => {
-  const session = res.locals.session;
-
-  return res.json({
-    status: "ok",
-    message: "You are authenticated",
-    user: session.user,
-  });
-});
 
 app.get("/api/health", (_req, res) => {
   res.json({

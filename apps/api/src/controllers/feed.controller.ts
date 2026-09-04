@@ -1,5 +1,6 @@
 import type { Request, Response } from "express";
 import { prisma } from "../lib/prisma.js";
+import { feedQuerySchema } from "../schemas/post.schema.js";
 
 export async function getPersonalizedFeed(
   req: Request,
@@ -8,19 +9,16 @@ export async function getPersonalizedFeed(
   try {
     const currentUser = res.locals.session.user;
 
-    const page = Math.max(
-      Number.parseInt(String(req.query.page ?? "1"), 10) || 1,
-      1,
-    );
+    const parsed = feedQuerySchema.safeParse(req.query);
+    if (!parsed.success) {
+      return res.status(400).json({
+        status: "error",
+        message: "Invalid pagination parameters",
+        errors: parsed.error.flatten(),
+      });
+    }
 
-    const limit = Math.min(
-      Math.max(
-        Number.parseInt(String(req.query.limit ?? "10"), 10) || 10,
-        1,
-      ),
-      50,
-    );
-
+    const { page, limit } = parsed.data;
     const skip = (page - 1) * limit;
 
     const following = await prisma.follow.findMany({
@@ -32,13 +30,9 @@ export async function getPersonalizedFeed(
       },
     });
 
-    const followingIds = following.map(
-      (follow) => follow.followingId,
-    );
-
     const authorIds = [
       currentUser.id,
-      ...followingIds,
+      ...following.map((follow) => follow.followingId),
     ];
 
     const [posts, total] = await Promise.all([
@@ -58,6 +52,7 @@ export async function getPersonalizedFeed(
             select: {
               id: true,
               name: true,
+              username: true,
               image: true,
             },
           },
@@ -79,6 +74,8 @@ export async function getPersonalizedFeed(
       }),
     ]);
 
+    const totalPages = Math.ceil(total / limit);
+
     return res.json({
       status: "success",
       data: posts,
@@ -86,8 +83,8 @@ export async function getPersonalizedFeed(
         page,
         limit,
         total,
-        totalPages: Math.ceil(total / limit),
-        hasNextPage: page * limit < total,
+        totalPages,
+        hasNextPage: page < totalPages,
         hasPreviousPage: page > 1,
       },
     });

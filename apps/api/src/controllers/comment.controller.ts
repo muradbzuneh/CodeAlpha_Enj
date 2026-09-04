@@ -47,6 +47,7 @@ export async function createComment(req: Request, res: Response) {
           select: {
             id: true,
             name: true,
+            username: true,
             image: true,
           },
         },
