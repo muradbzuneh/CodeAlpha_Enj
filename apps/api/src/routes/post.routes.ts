@@ -7,6 +7,8 @@ import {
   getPosts,
   updatePost,
 } from "../controllers/post.controller.js";
+import { getLikedPosts } from "../controllers/liked-post.controller.js";
+import { getTrendingPosts } from "../controllers/trending.controller.js";
 
 import { requireAuth } from "../middleware/require-auth.js";
 import { validateBody } from "../middleware/validate.js";
@@ -19,6 +21,10 @@ import {
 export const postRouter = Router();
 
 postRouter.get("/", getPosts);
+
+// Static routes MUST come before /:id to avoid param capture
+postRouter.get("/liked", requireAuth, getLikedPosts);
+postRouter.get("/trending", getTrendingPosts);
 
 postRouter.get("/:id", getPostById);
 
