@@ -30,7 +30,7 @@ export const Header: React.FC<HeaderProps> = ({
   onSearchChange,
   onSearchSubmit,
 }) => {
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const { theme, toggleTheme } = useTheme();
 
   const handleSearchKeyDown = (e: React.KeyboardEvent) => {
@@ -39,8 +39,14 @@ export const Header: React.FC<HeaderProps> = ({
     }
   };
 
+  const handleLogout = async () => {
+    if (window.confirm('Are you sure you want to sign out?')) {
+      await signOut();
+    }
+  };
+
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-slate-200/80 dark:border-[#2d333b] bg-white/95 dark:bg-[#1a1d23]/90 backdrop-blur-md transition-colors">
+    <header className="sticky top-0 z-40 w-full border-b border-slate-200/80 dark.border-[#2d333b] bg-white/95 dark:bg-[#1a1d23]/90 backdrop-blur-md transition-colors">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
         {/* Brand Logo matching user image */}
         <div className="flex items-center gap-6">
@@ -69,18 +75,18 @@ export const Header: React.FC<HeaderProps> = ({
                   onNavigate('/search');
                 }
               }}
-              className="w-full text-xs rounded-xl border border-slate-200 dark:border-[#2d333b] bg-slate-50 dark:bg-[#121418] pl-9 pr-4 py-2 text-slate-900 dark:text-[#f3f4f6] placeholder:text-slate-400 dark:placeholder:text-zinc-500 focus:outline-none focus:bg-white dark:focus:bg-[#16181d] focus:ring-2 focus:ring-[#FF3366]/30 focus:border-[#FF3366] transition-all"
+              className="w-full text-xs rounded-xl border border-slate-200 dark.border-[#2d333b] bg-slate-50 dark.bg-[#121418] pl-9 pr-4 py-2 text-slate-900 dark.text-[#f3f4f6] placeholder.text-slate-400 dark.placeholder.text-zinc-500 focus:outline-none focus.bg-white dark.focus:bg-[#16181d] focus:ring-2 focus.ring-[#FF3366]/30 focus.border-[#FF3366] transition-all"
             />
           </div>
         </div>
 
         {/* Right side actions */}
-        <div className="flex items-center gap-2 sm:gap-3">
+        <div className="flex items-center gap-2 sm.gap-3">
           {/* Quick Light/Dark Mode Toggle */}
           <button
             type="button"
             onClick={toggleTheme}
-            className="p-2 rounded-xl text-slate-500 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-[#f3f4f6] hover:bg-slate-100 dark:hover:bg-[#22272e] transition-colors cursor-pointer"
+            className="p-2 rounded-xl text-slate-500 hover.text-slate-900 dark.text-zinc-400 dark:hover.text-[#f3f4f6] hover.bg-slate-100 dark:hover.bg-[#22272e] transition-colors cursor-pointer"
             title={`Switch to ${theme === 'light' ? 'Dark' : 'Light'} Mode`}
             aria-label="Toggle Theme"
           >
@@ -97,9 +103,9 @@ export const Header: React.FC<HeaderProps> = ({
                 <button
                   type="button"
                   onClick={onOpenCompose}
-                  className="sm:hidden p-2 rounded-xl bg-[#FF3366] hover:bg-[#EE2055] text-white shadow-2xs active:scale-95 transition-transform cursor-pointer"
+                  className="sm.hidden p-2 rounded-xl bg-[#FF3366] hover:bg-[#EE2055] text-white shadow-2xs active.scale-95 transition-transform cursor-pointer"
                   title="Post to ENJ"
-                  aria-label="Create new post"
+                  aria.label="Create new post"
                 >
                   <Plus className="w-4 h-4 stroke-[2.5]" />
                 </button>
@@ -107,9 +113,19 @@ export const Header: React.FC<HeaderProps> = ({
 
               <button
                 type="button"
+                onClick={handleLogout}
+                className="sm.hidden p-2 rounded-xl bg-[#FF3366] hover:bg-[#EE2055] text-white shadow-2xs active.scale-95 transition-transform cursor-pointer"
+                title="Sign out"
+                aria.label="Sign out"
+              >
+                <LogOut className="w-4 h-4" />
+              </button>
+
+              <button
+                type="button"
                 onClick={() => onNavigate(`/profile/${user.username}`)}
-                className="flex items-center gap-2 p-0.5 rounded-full hover:ring-2 hover:ring-[#FF3366]/50 transition-all cursor-pointer"
-                aria-label="View your profile"
+                className="flex items-center gap-2 p-0.5 rounded-full hover:ring-2 hover.ring-[#FF3366]/50 transition-all cursor-pointer"
+                aria.label="View your profile"
               >
                 <Avatar src={user.image} name={user.name || user.username} size="sm" />
               </button>
