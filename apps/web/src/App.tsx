@@ -11,7 +11,6 @@ import { ToastProvider } from './context/ToastContext';
 import { MainLayout } from './components/layout/MainLayout';
 import { HomeFeedPage } from './pages/home/HomeFeedPage';
 import { ExplorePage } from './pages/explore/ExplorePage';
-import { LikedPage } from './pages/liked/LikedPage';
 import { ProfilePage } from './pages/profile/ProfilePage';
 import { SettingsProfilePage } from './pages/settings/SettingsProfilePage';
 import { LoginPage } from './pages/auth/LoginPage';
@@ -101,15 +100,6 @@ function RouterApp() {
         onProfileClick={(username) => navigate(`/profile/${username}`)}
         onCommentClick={(post) => setActiveDiscussionPost(post)}
         onEditClick={(post) => setActiveEditPost(post)}
-      />
-    );
-  } else if (currentPath === '/liked') {
-    pageContent = (
-      <LikedPage
-        onProfileClick={(username) => navigate(`/profile/${username}`)}
-        onCommentClick={(post) => setActiveDiscussionPost(post)}
-        onEditClick={(post) => setActiveEditPost(post)}
-        onNavigate={navigate}
       />
     );
   } else if (currentPath.startsWith('/profile/')) {

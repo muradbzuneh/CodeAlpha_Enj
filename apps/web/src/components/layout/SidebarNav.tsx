@@ -5,7 +5,7 @@
  */
 
 import React from 'react';
-import { Home, Compass, Heart, User, Settings, LogOut, LogIn, Film, Plus } from 'lucide-react';
+import { Home, Compass, User, Settings, LogOut, LogIn, Film, Plus } from 'lucide-react';
 import { Avatar } from '../ui/Avatar';
 import { useAuth } from '../../context/AuthContext';
 
@@ -27,7 +27,6 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
     { label: 'Reels', path: '/reels', icon: Film, requiresAuth: false },
     { label: 'Add', path: '#post', icon: Plus, isAction: true, requiresAuth: false },
     { label: 'Explore', path: '/explore', icon: Compass, requiresAuth: false },
-    { label: 'Liked', path: '/liked', icon: Heart, requiresAuth: true },
     {
       label: 'Profile',
       path: user ? `/profile/${user.username}` : '/login',
