@@ -1,0 +1,6 @@
+{
+  "name": "ENJ",
+  "description": "Modern, production-ready frontend for the ENJ social media platform, designed for seamless Express, Prisma, and Better Auth backend integration.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
