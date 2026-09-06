@@ -120,3 +120,32 @@ export interface CreateStoryInput {
   moodEmoji?: string;
 }
 
+export interface Notification {
+  id: string;
+  type: 'like' | 'comment' | 'follow' | 'system';
+  title: string;
+  message: string;
+  timestamp: string;
+  read: boolean;
+  actor?: {
+    id: string;
+    username: string;
+    name: string;
+    image?: string | null;
+  };
+  post?: {
+    id: string;
+    content: string;
+    authorId: string;
+    createdAt: string;
+    likesCount: number;
+    commentsCount: number;
+    isLiked?: boolean;
+    mediaUrl?: string | null;
+  };
+  followStatus?: {
+    isFollowing: boolean;
+    followerId: string;
+  };
+}
+
