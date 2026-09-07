@@ -27,7 +27,7 @@ export const CommentItem: React.FC<CommentItemProps> = ({
   const { showToast } = useToast();
   const [isDeleting, setIsDeleting] = useState(false);
 
-  const isOwnComment = user && (user.id === comment.authorId || user.username === comment.author.username);
+  const isOwnComment = Boolean(user && user.id && comment.authorId && user.id === comment.authorId);
 
   const handleDelete = async () => {
     setIsDeleting(true);

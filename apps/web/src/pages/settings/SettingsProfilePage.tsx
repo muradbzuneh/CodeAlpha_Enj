@@ -87,7 +87,7 @@ export const SettingsProfilePage: React.FC<SettingsProfilePageProps> = ({ onNavi
 
       updateCurrentUser(updatedUser);
       showToast('Profile updated successfully', 'success');
-      onNavigate(`/profile/${updatedUser.username}`);
+      onNavigate(user.username ? `/profile/${user.username}` : '/');
     } catch (err: any) {
       setError(err?.message || 'Failed to update profile.');
     } finally {
@@ -101,7 +101,7 @@ export const SettingsProfilePage: React.FC<SettingsProfilePageProps> = ({ onNavi
       <div className="flex items-center gap-3 px-1">
         <button
           type="button"
-          onClick={() => onNavigate(`/profile/${user.username}`)}
+          onClick={() => onNavigate(user.username ? `/profile/${user.username}` : '/settings/profile')}
           className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-[#22272e] text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-[#f3f4f6] transition-colors cursor-pointer"
           aria-label="Back to profile"
         >
@@ -262,7 +262,7 @@ export const SettingsProfilePage: React.FC<SettingsProfilePageProps> = ({ onNavi
               type="button"
               variant="outline"
               size="md"
-              onClick={() => onNavigate(`/profile/${user.username}`)}
+              onClick={() => onNavigate(user.username ? `/profile/${user.username}` : '/settings/profile')}
               disabled={isSaving}
             >
               Cancel

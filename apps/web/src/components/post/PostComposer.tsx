@@ -6,7 +6,7 @@
  */
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Image, Smile, X, UploadCloud, Hash } from 'lucide-react';
+import { Send, Image, X, UploadCloud, Hash } from 'lucide-react';
 import { Avatar } from '../ui/Avatar';
 import { Button } from '../ui/Button';
 import { useAuth } from '../../context/AuthContext';
@@ -22,7 +22,6 @@ export interface PostComposerProps {
 
 const MAX_CHAR_LIMIT = 280;
 
-const QUICK_EMOJIS = ['✨', '☕', '📸', '🌿', '💡', '🔥', '❤️', '🎨'];
 const QUICK_TAGS = ['GoldenHour', 'MorningCoffee', 'Ceramics', 'SoundDesign', 'LifeUpdate'];
 
 const PHOTO_PRESETS = [
@@ -43,7 +42,6 @@ export const PostComposer: React.FC<PostComposerProps> = ({
 
   const [content, setContent] = useState(initialContent);
   const [mediaUrl, setMediaUrl] = useState<string | null>(null);
-  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [showMediaPicker, setShowMediaPicker] = useState(false);
 
   useEffect(() => {
@@ -114,10 +112,6 @@ export const PostComposer: React.FC<PostComposerProps> = ({
     reader.readAsDataURL(file);
   };
 
-  const insertEmoji = (emoji: string) => {
-    setContent((prev) => (prev ? `${prev} ${emoji}` : emoji));
-  };
-
   const insertTag = (tag: string) => {
     setContent((prev) => (prev ? `${prev} #${tag}` : `#${tag}`));
   };
@@ -133,7 +127,6 @@ export const PostComposer: React.FC<PostComposerProps> = ({
       const createdPost = await api.posts.create(content.trim(), mediaUrl);
       setContent('');
       setMediaUrl(null);
-      setShowEmojiPicker(false);
       setShowMediaPicker(false);
       showToast('Post published successfully', 'success');
       onPostCreated?.(createdPost);
@@ -202,22 +195,6 @@ export const PostComposer: React.FC<PostComposerProps> = ({
                 >
                   <X className="w-3.5 h-3.5" />
                 </button>
-              </div>
-            )}
-
-            {/* Quick emoji drawer */}
-            {showEmojiPicker && (
-              <div className="mt-2.5 p-2 bg-slate-50 dark:bg-[#22272e] rounded-xl border border-slate-200/80 dark:border-[#2d333b] flex flex-wrap items-center gap-1.5">
-                {QUICK_EMOJIS.map((emoji) => (
-                  <button
-                    key={emoji}
-                    type="button"
-                    onClick={() => insertEmoji(emoji)}
-                    className="p-1.5 hover:bg-white dark:hover:bg-[#1a1d23] rounded-lg text-base transition-transform active:scale-125 cursor-pointer"
-                  >
-                    {emoji}
-                  </button>
-                ))}
               </div>
             )}
 
@@ -294,7 +271,6 @@ export const PostComposer: React.FC<PostComposerProps> = ({
                   type="button"
                   onClick={() => {
                     setShowMediaPicker((prev) => !prev);
-                    setShowEmojiPicker(false);
                   }}
                   className={`p-2 rounded-xl transition-colors cursor-pointer ${
                     showMediaPicker || mediaUrl
@@ -305,23 +281,6 @@ export const PostComposer: React.FC<PostComposerProps> = ({
                   aria-label="Attach photo"
                 >
                   <Image className="w-4 h-4" />
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowEmojiPicker((prev) => !prev);
-                    setShowMediaPicker(false);
-                  }}
-                  className={`p-2 rounded-xl transition-colors cursor-pointer ${
-                    showEmojiPicker
-                      ? 'text-[#FFAA00] bg-amber-50 dark:bg-amber-950/30'
-                      : 'text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#22272e]'
-                  }`}
-                  title="Insert emoji"
-                  aria-label="Insert emoji"
-                >
-                  <Smile className="w-4 h-4" />
                 </button>
               </div>
 

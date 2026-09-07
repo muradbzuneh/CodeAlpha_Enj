@@ -30,7 +30,7 @@ export const MobileNav: React.FC<MobileNavProps> = ({ currentPath, onNavigate, o
     { label: 'Explore', path: '/explore', icon: Compass },
     {
       label: 'Profile',
-      path: user ? `/profile/${user.username}` : '/login',
+      path: user ? (user.username ? `/profile/${user.username}` : '/settings/profile') : '/login',
       icon: User,
     },
   ];

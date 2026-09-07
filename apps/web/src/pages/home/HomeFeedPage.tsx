@@ -122,7 +122,7 @@ export const HomeFeedPage: React.FC<HomeFeedPageProps> = ({
     : posts.filter((p) => {
         if (!user) return true;
         const authorUsername = p.author.username.toLowerCase();
-        const isSelf = authorUsername === user.username.toLowerCase() || p.authorId === user.id;
+        const isSelf = p.authorId === user.id || (user.username && authorUsername === user.username.toLowerCase());
         return isSelf || followingUsernames.has(authorUsername);
       });
 

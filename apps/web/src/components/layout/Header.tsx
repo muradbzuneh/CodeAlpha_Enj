@@ -123,7 +123,7 @@ export const Header: React.FC<HeaderProps> = ({
 
               <button
                 type="button"
-                onClick={() => onNavigate(`/profile/${user.username}`)}
+                onClick={() => onNavigate(user.username ? `/profile/${user.username}` : '/settings/profile')}
                 className="flex items-center gap-2 p-0.5 rounded-full hover:ring-2 hover.ring-[#FF3366]/50 transition-all cursor-pointer"
                 aria-label="View your profile"
               >
