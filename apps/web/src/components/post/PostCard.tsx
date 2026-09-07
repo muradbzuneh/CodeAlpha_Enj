@@ -46,7 +46,7 @@ export const PostCard: React.FC<PostCardProps> = ({
     setIsLiked(Boolean(post.isLiked));
   }, [post.likesCount, post.isLiked]);
 
-  const isOwnPost = user && (user.id === post.authorId || user.username === post.author.username);
+  const isOwnPost = Boolean(user && user.id && post.authorId && user.id === post.authorId);
 
   const handleLikeToggle = async (e: React.MouseEvent) => {
     e.stopPropagation();

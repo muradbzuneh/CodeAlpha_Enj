@@ -4,9 +4,10 @@
  * Styled with light default and dark mode support and brand gradient accents.
  */
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Home, Compass, User, Settings, LogOut, LogIn, Film, Plus } from 'lucide-react';
 import { Avatar } from '../ui/Avatar';
+import { ConfirmDialog } from '../ui/ConfirmDialog';
 import { useAuth } from '../../context/AuthContext';
 
 export interface SidebarNavProps {
@@ -21,6 +22,7 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
   onOpenCompose,
 }) => {
   const { user, signOut } = useAuth();
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   const navItems = [
     { label: 'Home', path: '/', icon: Home, requiresAuth: false },
@@ -37,6 +39,7 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
   ];
 
   return (
+    <>
     <aside className="w-60 shrink-0 sticky top-20 flex flex-col justify-between h-[calc(100vh-6rem)] pb-4 hidden md:flex">
       <div className="space-y-4">
         {/* Navigation list */}
@@ -109,7 +112,7 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
 
             <button
               type="button"
-              onClick={() => signOut()}
+              onClick={() => setShowLogoutConfirm(true)}
               title="Sign out"
               className="p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-lg transition-colors cursor-pointer"
               aria-label="Sign out"
@@ -138,5 +141,19 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
         )}
       </div>
     </aside>
+
+    <ConfirmDialog
+      isOpen={showLogoutConfirm}
+      title="Sign out"
+      message="Are you sure you want to sign out of your account?"
+      confirmLabel="Sign out"
+      cancelLabel="Cancel"
+      onConfirm={async () => {
+        setShowLogoutConfirm(false);
+        await signOut();
+      }}
+      onCancel={() => setShowLogoutConfirm(false)}
+    />
+    </>
   );
 };

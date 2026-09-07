@@ -7,11 +7,12 @@
  * - User Profile & Quick Actions
  */
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Search, LogIn, UserPlus, Plus, Sun, Moon, LogOut } from 'lucide-react';
 import { Logo } from '../ui/Logo';
 import { Avatar } from '../ui/Avatar';
 import { Button } from '../ui/Button';
+import { ConfirmDialog } from '../ui/ConfirmDialog';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 
@@ -32,6 +33,7 @@ export const Header: React.FC<HeaderProps> = ({
 }) => {
   const { user, signOut } = useAuth();
   const { theme, toggleTheme } = useTheme();
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   const handleSearchKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
@@ -40,9 +42,7 @@ export const Header: React.FC<HeaderProps> = ({
   };
 
   const handleLogout = async () => {
-    if (window.confirm('Are you sure you want to sign out?')) {
-      await signOut();
-    }
+    setShowLogoutConfirm(true);
   };
 
   return (
@@ -152,6 +152,19 @@ export const Header: React.FC<HeaderProps> = ({
           )}
         </div>
       </div>
+
+      <ConfirmDialog
+        isOpen={showLogoutConfirm}
+        title="Sign out"
+        message="Are you sure you want to sign out of your account?"
+        confirmLabel="Sign out"
+        cancelLabel="Cancel"
+        onConfirm={async () => {
+          setShowLogoutConfirm(false);
+          await signOut();
+        }}
+        onCancel={() => setShowLogoutConfirm(false)}
+      />
     </header>
   );
 };
