@@ -8,7 +8,7 @@
  */
 
 import React from 'react';
-import { Search, LogIn, UserPlus, Plus, Sun, Moon, Sparkles } from 'lucide-react';
+import { Search, LogIn, UserPlus, Plus, Sun, Moon, LogOut } from 'lucide-react';
 import { Logo } from '../ui/Logo';
 import { Avatar } from '../ui/Avatar';
 import { Button } from '../ui/Button';
@@ -105,7 +105,7 @@ export const Header: React.FC<HeaderProps> = ({
                   onClick={onOpenCompose}
                   className="sm.hidden p-2 rounded-xl bg-[#FF3366] hover:bg-[#EE2055] text-white shadow-2xs active.scale-95 transition-transform cursor-pointer"
                   title="Post to ENJ"
-                  aria.label="Create new post"
+                  aria-label="Create new post"
                 >
                   <Plus className="w-4 h-4 stroke-[2.5]" />
                 </button>
@@ -116,7 +116,7 @@ export const Header: React.FC<HeaderProps> = ({
                 onClick={handleLogout}
                 className="sm.hidden p-2 rounded-xl bg-[#FF3366] hover:bg-[#EE2055] text-white shadow-2xs active.scale-95 transition-transform cursor-pointer"
                 title="Sign out"
-                aria.label="Sign out"
+                aria-label="Sign out"
               >
                 <LogOut className="w-4 h-4" />
               </button>
@@ -125,7 +125,7 @@ export const Header: React.FC<HeaderProps> = ({
                 type="button"
                 onClick={() => onNavigate(`/profile/${user.username}`)}
                 className="flex items-center gap-2 p-0.5 rounded-full hover:ring-2 hover.ring-[#FF3366]/50 transition-all cursor-pointer"
-                aria.label="View your profile"
+                aria-label="View your profile"
               >
                 <Avatar src={user.image} name={user.name || user.username} size="sm" />
               </button>
