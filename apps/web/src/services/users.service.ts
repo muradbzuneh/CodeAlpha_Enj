@@ -1,5 +1,5 @@
 import { apiClient } from "@/lib/api/client";
-import type { User, Profile, Post } from "@/types";
+import type { User, Profile, Post, FollowUserItem } from "@/types";
 import type { UpdateProfileInput, Paginated } from "@/types/api";
 
 interface BackendProfile {
@@ -10,6 +10,8 @@ interface BackendProfile {
   image?: string | null;
   createdAt?: string;
   _count?: { posts: number; followers: number; following: number };
+  isFollowing?: boolean;
+  isOwnProfile?: boolean;
 }
 
 function normalizeProfile(data: BackendProfile, extra?: Partial<Profile>): Profile {
@@ -22,6 +24,8 @@ function normalizeProfile(data: BackendProfile, extra?: Partial<Profile>): Profi
     postCount: data._count?.posts ?? 0,
     followerCount: data._count?.followers ?? 0,
     followingCount: data._count?.following ?? 0,
+    isFollowing: data.isFollowing ?? false,
+    isOwnProfile: data.isOwnProfile ?? false,
     createdAt: data.createdAt,
     ...extra,
   };
@@ -58,13 +62,13 @@ export const usersService = {
     return normalizeProfile(res.data);
   },
 
-  async getFollowing(userId: string): Promise<User[]> {
-    const res = await apiClient.get<{ data: User[] }>(`/api/user/${userId}/following`);
+  async getFollowing(userId: string): Promise<FollowUserItem[]> {
+    const res = await apiClient.get<{ data: FollowUserItem[] }>(`/api/user/${userId}/following`);
     return Array.isArray(res.data) ? res.data : [];
   },
 
-  async getFollowers(userId: string): Promise<User[]> {
-    const res = await apiClient.get<{ data: User[] }>(`/api/user/${userId}/followers`);
+  async getFollowers(userId: string): Promise<FollowUserItem[]> {
+    const res = await apiClient.get<{ data: FollowUserItem[] }>(`/api/user/${userId}/followers`);
     return Array.isArray(res.data) ? res.data : [];
   },
 
@@ -97,12 +101,12 @@ export const usersService = {
     };
   },
 
-  async followers(identifier: string): Promise<User[]> {
+  async followers(identifier: string): Promise<FollowUserItem[]> {
     const profile = await this.getProfile(identifier);
     return this.getFollowers(profile.id);
   },
 
-  async following(identifier: string): Promise<User[]> {
+  async following(identifier: string): Promise<FollowUserItem[]> {
     const profile = await this.getProfile(identifier);
     return this.getFollowing(profile.id);
   },
