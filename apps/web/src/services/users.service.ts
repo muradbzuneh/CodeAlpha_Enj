@@ -1,72 +1,114 @@
-/**
- * Users & Follow Service communicating with Express backend.
- * Endpoints:
- * - GET    /api/users/:userId
- * - GET    /api/users/:userId/followers
- * - GET    /api/users/:userId/following
- * - POST   /api/users/:userId/follow
- * - DELETE /api/users/:userId/follow
- */
+import { apiClient } from "@/lib/api/client";
+import type { User, Profile, Post } from "@/types";
+import type { UpdateProfileInput, Paginated } from "@/types/api";
 
-import { apiClient } from '../lib/api/client';
-import type { Profile, FollowUserItem } from '../types';
+interface BackendProfile {
+  id: string;
+  name: string;
+  username: string;
+  bio?: string | null;
+  image?: string | null;
+  createdAt?: string;
+  _count?: { posts: number; followers: number; following: number };
+}
+
+function normalizeProfile(data: BackendProfile, extra?: Partial<Profile>): Profile {
+  return {
+    id: data.id,
+    username: data.username,
+    name: data.name,
+    bio: data.bio ?? null,
+    image: data.image ?? null,
+    postCount: data._count?.posts ?? 0,
+    followerCount: data._count?.followers ?? 0,
+    followingCount: data._count?.following ?? 0,
+    createdAt: data.createdAt,
+    ...extra,
+  };
+}
+
+interface BackendPost {
+  id: string;
+  content: string;
+  authorId: string;
+  createdAt: string;
+  updatedAt?: string;
+  author: { id: string; name: string; username: string; image?: string | null };
+  _count?: { comments: number; likes: number };
+}
+
+function normalizePost(data: BackendPost): Post {
+  return {
+    id: data.id,
+    content: data.content,
+    authorId: data.authorId,
+    createdAt: data.createdAt,
+    updatedAt: data.updatedAt,
+    author: data.author,
+    likesCount: data._count?.likes ?? 0,
+    commentsCount: data._count?.comments ?? 0,
+    isLiked: false,
+    mediaUrl: null,
+  };
+}
 
 export const usersService = {
-  /**
-   * Get user profile by userId or username.
-   * Route: GET /api/users/:userId
-   */
-  async getUserProfile(userIdOrUsername: string): Promise<Profile> {
-    const res = await apiClient.get<Profile | { profile: Profile }>(`/api/users/${userIdOrUsername}`);
-    if ('profile' in res && res.profile) {
-      return res.profile;
-    }
-    return res as Profile;
+  async getProfile(identifier: string): Promise<Profile> {
+    const res = await apiClient.get<{ data: BackendProfile }>(`/api/user/${identifier}`);
+    return normalizeProfile(res.data);
   },
 
-  /**
-   * Get list of followers for a user.
-   * Route: GET /api/users/:userId/followers
-   */
-  async getFollowers(userId: string): Promise<FollowUserItem[]> {
-    const res = await apiClient.get<FollowUserItem[] | { followers: FollowUserItem[] }>(`/api/users/${userId}/followers`);
-    if (Array.isArray(res)) {
-      return res;
-    }
-    if ('followers' in res && Array.isArray(res.followers)) {
-      return res.followers;
-    }
-    return [];
+  async getFollowing(userId: string): Promise<User[]> {
+    const res = await apiClient.get<{ data: User[] }>(`/api/user/${userId}/following`);
+    return Array.isArray(res.data) ? res.data : [];
   },
 
-  /**
-   * Get list of accounts followed by a user.
-   * Route: GET /api/users/:userId/following
-   */
-  async getFollowing(userId: string): Promise<FollowUserItem[]> {
-    const res = await apiClient.get<FollowUserItem[] | { following: FollowUserItem[] }>(`/api/users/${userId}/following`);
-    if (Array.isArray(res)) {
-      return res;
-    }
-    if ('following' in res && Array.isArray(res.following)) {
-      return res.following;
-    }
-    return [];
+  async getFollowers(userId: string): Promise<User[]> {
+    const res = await apiClient.get<{ data: User[] }>(`/api/user/${userId}/followers`);
+    return Array.isArray(res.data) ? res.data : [];
   },
 
-  /**
-   * Follow a user.
-   * Route: POST /api/users/:userId/follow
-   */
-  async followUser(userId: string): Promise<{ success: boolean }> {
-    return await apiClient.post<{ success: boolean }>(`/api/users/${userId}/follow`);
+  async follow(userId: string): Promise<void> {
+    await apiClient.post(`/api/users/${userId}/follow`);
   },
 
-  /**
-   * Unfollow a user.
-   * Route: DELETE /api/users/:userId/follow
-   */
-  async unfollowUser(userId: string): Promise<{ success: boolean }> {
-    return await apiClient.delete<{ success: boolean }>(`/api/users/${userId}/follow`);
+  async unfollow(userId: string): Promise<void> {
+    await apiClient.delete(`/api/users/${userId}/follow`);
+  },
+
+  async getPosts(
+    identifier: string,
+    opts?: { page?: number; limit?: number },
+  ): Promise<Paginated<Post>> {
+    const page = opts?.page ?? 1;
+    const limit = opts?.limit ?? 20;
+    const profile = await this.getProfile(identifier);
+    const res = await apiClient.get<{ data: BackendPost[]; pagination: { total: number; hasNextPage: boolean } }>(
+      "/api/posts",
+      { page, limit },
+    );
+    const allPosts = Array.isArray(res.data) ? res.data.map(normalizePost) : [];
+    const authored = allPosts.filter(
+      (p) => p.authorId === profile.id || p.author.username.toLowerCase() === identifier.toLowerCase(),
+    );
+    return {
+      items: authored,
+      pagination: { page, limit, hasMore: res.pagination?.hasNextPage ?? false, total: res.pagination?.total },
+    };
+  },
+
+  async followers(identifier: string): Promise<User[]> {
+    const profile = await this.getProfile(identifier);
+    return this.getFollowers(profile.id);
+  },
+
+  async following(identifier: string): Promise<User[]> {
+    const profile = await this.getProfile(identifier);
+    return this.getFollowing(profile.id);
+  },
+
+  async updateProfile(input: UpdateProfileInput): Promise<Profile> {
+    const res = await apiClient.patch<{ data: BackendProfile }>("/api/profile", input);
+    return normalizeProfile(res.data);
   },
 };

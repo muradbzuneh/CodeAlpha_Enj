@@ -1,70 +1,99 @@
-/**
- * Posts Service communicating with Express backend.
- * Endpoints:
- * - POST   /api/posts
- * - GET    /api/posts
- * - GET    /api/posts/:id
- * - PATCH  /api/posts/:id
- * - DELETE /api/posts/:id
- */
+import { apiClient } from "@/lib/api/client";
+import type { Post } from "@/types";
 
-import { apiClient } from '../lib/api/client';
-import type { Post, FeedResponse } from '../types';
+interface BackendPost {
+  id: string;
+  content: string;
+  authorId: string;
+  createdAt: string;
+  updatedAt?: string;
+  author: { id: string; name: string; username: string; image?: string | null };
+  _count?: { comments: number; likes: number };
+}
+
+function normalizePost(data: BackendPost): Post {
+  return {
+    id: data.id,
+    content: data.content,
+    authorId: data.authorId,
+    createdAt: data.createdAt,
+    updatedAt: data.updatedAt,
+    author: data.author,
+    likesCount: data._count?.likes ?? 0,
+    commentsCount: data._count?.comments ?? 0,
+    isLiked: false,
+    mediaUrl: null,
+  };
+}
+
+function extractPosts(res: unknown): Post[] {
+  if (!res || typeof res !== "object") return [];
+  const record = res as Record<string, unknown>;
+  const data = record["data"];
+  if (Array.isArray(data)) return data.map(normalizePost);
+  return [];
+}
+
+function extractPagination(res: unknown) {
+  if (!res || typeof res !== "object") return { page: 1, limit: 20, hasMore: false };
+  const record = res as Record<string, unknown>;
+  const p = record["pagination"] as Record<string, unknown> | undefined;
+  const page = (p?.["page"] as number) ?? 1;
+  const limit = (p?.["limit"] as number) ?? 20;
+  const total = p?.["total"] as number | undefined;
+  const hasNext = (p?.["hasNextPage"] as boolean) ?? (total !== undefined ? page * limit < total : false);
+  return { page, limit, hasMore: hasNext, total };
+}
 
 export const postsService = {
-  /**
-   * Fetch paginated posts list.
-   * Route: GET /api/posts
-   */
-  async getPosts(page: number = 1, limit: number = 20): Promise<FeedResponse> {
-    const res = await apiClient.get<FeedResponse | Post[]>('/api/posts', { page, limit });
-    if (Array.isArray(res)) {
-      return { posts: res, pagination: { page, limit, hasMore: false } };
-    }
-    return res;
+  async getPosts(page = 1, limit = 20): Promise<{ posts: Post[]; items: Post[]; pagination: ReturnType<typeof extractPagination> }> {
+    const res = await apiClient.get("/api/posts", { page, limit });
+    const posts = extractPosts(res);
+    const pagination = extractPagination(res);
+    return { posts, items: posts, pagination };
   },
 
-  /**
-   * Fetch single post by ID.
-   * Route: GET /api/posts/:id
-   */
-  async getPostById(id: string): Promise<Post> {
-    const res = await apiClient.get<Post | { post: Post }>(`/api/posts/${id}`);
-    if ('post' in res && res.post) {
-      return res.post;
-    }
-    return res as Post;
+  async create(
+    contentOrObj: string | { content: string },
+    _mediaUrl?: string | null,
+  ): Promise<Post> {
+    const content = typeof contentOrObj === "string" ? contentOrObj : contentOrObj.content;
+    const res = await apiClient.post<{ data: BackendPost }>("/api/posts", { content });
+    return normalizePost(res.data);
   },
 
-  /**
-   * Create a new post.
-   * Route: POST /api/posts
-   */
-  async createPost(content: string, mediaUrl?: string | null): Promise<Post> {
-    const res = await apiClient.post<Post | { post: Post }>('/api/posts', { content, mediaUrl });
-    if ('post' in res && res.post) {
-      return res.post;
-    }
-    return res as Post;
+  async update(
+    id: string,
+    contentOrObj: string | { content: string },
+  ): Promise<Post> {
+    const content = typeof contentOrObj === "string" ? contentOrObj : contentOrObj.content;
+    const res = await apiClient.patch<{ data: BackendPost }>(`/api/posts/${id}`, { content });
+    return normalizePost(res.data);
   },
 
-  /**
-   * Update post owned by current user.
-   * Route: PATCH /api/posts/:id
-   */
-  async updatePost(id: string, content: string): Promise<Post> {
-    const res = await apiClient.patch<Post | { post: Post }>(`/api/posts/${id}`, { content });
-    if ('post' in res && res.post) {
-      return res.post;
-    }
-    return res as Post;
+  async delete(id: string): Promise<void> {
+    await apiClient.delete(`/api/posts/${id}`);
   },
 
-  /**
-   * Delete post owned by current user.
-   * Route: DELETE /api/posts/:id
-   */
-  async deletePost(id: string): Promise<void> {
-    await apiClient.delete<void>(`/api/posts/${id}`);
+  async remove(id: string): Promise<void> {
+    return this.delete(id);
+  },
+
+  async like(postId: string): Promise<{ likesCount: number; isLiked: boolean }> {
+    await apiClient.post(`/api/posts/${postId}/like`);
+    const res = await apiClient.get<{ data: BackendPost }>(`/api/posts/${postId}`);
+    return {
+      likesCount: res.data?._count?.likes ?? 0,
+      isLiked: true,
+    };
+  },
+
+  async unlike(postId: string): Promise<{ likesCount: number; isLiked: boolean }> {
+    await apiClient.delete(`/api/posts/${postId}/like`);
+    const res = await apiClient.get<{ data: BackendPost }>(`/api/posts/${postId}`);
+    return {
+      likesCount: res.data?._count?.likes ?? 0,
+      isLiked: false,
+    };
   },
 };

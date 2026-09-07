@@ -1,47 +1,62 @@
-/**
- * Comments Service communicating with Express backend.
- * Endpoints:
- * - GET /api/posts/:postId/comments
- * - POST /api/posts/:postId/comments
- * - DELETE /api/comments/:id
- */
+import { apiClient } from "@/lib/api/client";
+import type { Comment } from "@/types";
 
-import { apiClient } from '../lib/api/client';
-import type { Comment, CommentsResponse } from '../types';
+interface BackendComment {
+  id: string;
+  content: string;
+  postId: string;
+  authorId: string;
+  createdAt: string;
+  updatedAt?: string;
+  author: { id: string; name: string; username?: string; image?: string | null };
+}
+
+function normalizeComment(data: BackendComment): Comment {
+  return {
+    id: data.id,
+    content: data.content,
+    postId: data.postId,
+    authorId: data.authorId,
+    createdAt: data.createdAt,
+    updatedAt: data.updatedAt,
+    author: {
+      id: data.author.id,
+      name: data.author.name,
+      username: data.author.username ?? "",
+      image: data.author.image,
+    },
+  };
+}
 
 export const commentsService = {
-  /**
-   * Fetch comments for a specific post.
-   * Route: GET /api/posts/:postId/comments
-   */
-  async getComments(postId: string): Promise<Comment[]> {
-    const res = await apiClient.get<Comment[] | CommentsResponse>(`/api/posts/${postId}/comments`);
-    if (Array.isArray(res)) {
-      return res;
-    }
-    if ('comments' in res) {
-      return res.comments;
-    }
+  async list(postId: string): Promise<Comment[]> {
+    const res = await apiClient.get<{ data: BackendComment[] }>(
+      `/api/posts/${postId}/comments`,
+      { page: 1, limit: 50 },
+    );
+    const data = res.data;
+    if (Array.isArray(data)) return data.map(normalizeComment);
     return [];
   },
 
-  /**
-   * Create a new comment on a post.
-   * Route: POST /api/posts/:postId/comments
-   */
-  async createComment(postId: string, content: string): Promise<Comment> {
-    const res = await apiClient.post<Comment | { comment: Comment }>(`/api/posts/${postId}/comments`, { content });
-    if ('comment' in res && res.comment) {
-      return res.comment;
-    }
-    return res as Comment;
+  async create(
+    postId: string,
+    contentOrObj: string | { content: string },
+  ): Promise<Comment> {
+    const content =
+      typeof contentOrObj === "string" ? contentOrObj : contentOrObj.content;
+    const res = await apiClient.post<{ data: BackendComment }>(
+      `/api/posts/${postId}/comments`,
+      { content },
+    );
+    return normalizeComment(res.data);
   },
 
-  /**
-   * Delete own comment.
-   * Route: DELETE /api/comments/:id
-   */
-  async deleteComment(commentId: string): Promise<void> {
-    await apiClient.delete<void>(`/api/comments/${commentId}`);
+  async delete(commentId: string): Promise<void> {
+    await apiClient.delete(`/api/comments/${commentId}`);
+  },
+
+  async remove(commentId: string): Promise<void> {
+    return this.delete(commentId);
   },
 };

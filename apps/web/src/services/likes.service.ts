@@ -1,40 +1,31 @@
-/**
- * Likes Service communicating with Express backend.
- * Endpoints:
- * - GET    /api/posts/:postId/likes
- * - POST   /api/posts/:postId/like
- * - DELETE /api/posts/:postId/like
- */
+import { apiClient } from "@/lib/api/client";
 
-import { apiClient } from '../lib/api/client';
-
-export interface LikeResponse {
-  likesCount: number;
-  isLiked: boolean;
+interface BackendPost {
+  id: string;
+  _count?: { likes: number };
 }
 
 export const likesService = {
-  /**
-   * Like a post.
-   * Route: POST /api/posts/:postId/like
-   */
-  async likePost(postId: string): Promise<LikeResponse> {
-    return await apiClient.post<LikeResponse>(`/api/posts/${postId}/like`);
+  async like(postId: string): Promise<{ likesCount: number; isLiked: boolean }> {
+    await apiClient.post(`/api/posts/${postId}/like`);
+    const res = await apiClient.get<{ data: BackendPost }>(`/api/posts/${postId}`);
+    return {
+      likesCount: res.data?._count?.likes ?? 0,
+      isLiked: true,
+    };
   },
 
-  /**
-   * Unlike a post.
-   * Route: DELETE /api/posts/:postId/like
-   */
-  async unlikePost(postId: string): Promise<LikeResponse> {
-    return await apiClient.delete<LikeResponse>(`/api/posts/${postId}/like`);
+  async unlike(postId: string): Promise<{ likesCount: number; isLiked: boolean }> {
+    await apiClient.delete(`/api/posts/${postId}/like`);
+    const res = await apiClient.get<{ data: BackendPost }>(`/api/posts/${postId}`);
+    return {
+      likesCount: res.data?._count?.likes ?? 0,
+      isLiked: false,
+    };
   },
 
-  /**
-   * Get post likes count and liked state.
-   * Route: GET /api/posts/:postId/likes
-   */
-  async getPostLikes(postId: string): Promise<LikeResponse> {
-    return await apiClient.get<LikeResponse>(`/api/posts/${postId}/likes`);
+  async list(postId: string): Promise<unknown[]> {
+    const res = await apiClient.get<{ data: unknown[] }>(`/api/posts/${postId}/likes`);
+    return Array.isArray(res.data) ? res.data : [];
   },
 };
