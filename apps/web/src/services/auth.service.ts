@@ -30,13 +30,11 @@ export const authService = {
     email: string,
     password: string,
     name: string,
-    username: string,
   ): Promise<User> {
     const res = await apiClient.post<{ user: User }>("/api/auth/sign-up/email", {
       email,
       password,
       name,
-      username,
     });
     return res.user;
   },

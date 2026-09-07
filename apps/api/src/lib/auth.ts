@@ -12,6 +12,20 @@ export const auth = betterAuth({
     enabled: true,
   },
 
+  user: {
+    additionalFields: {
+      username: {
+        type: "string",
+        required: false,
+        unique: false,
+      },
+      bio: {
+        type: "string",
+        required: false,
+      },
+    },
+  },
+
   trustedOrigins: ["http://localhost:3000"],
   baseURL: process.env.BETTER_AUTH_URL || "http://localhost:4001",
   secret: process.env.BETTER_AUTH_SECRET || "fallback-secret-change-me",

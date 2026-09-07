@@ -13,7 +13,7 @@ interface AuthContextType {
   isLoading: boolean;
   error: string | null;
   signIn: (email: string, pass: string) => Promise<void>;
-  signUp: (email: string, pass: string, name: string, username: string) => Promise<void>;
+  signUp: (email: string, pass: string, name: string) => Promise<void>;
   signOut: () => Promise<void>;
   refreshSession: () => Promise<void>;
   clearError: () => void;
@@ -64,11 +64,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const signUp = async (email: string, pass: string, name: string, username: string) => {
+  const signUp = async (email: string, pass: string, name: string) => {
     setIsLoading(true);
     setError(null);
     try {
-      const newUser = await api.auth.signUp(email, pass, name, username);
+      const newUser = await api.auth.signUp(email, pass, name);
       setUser(newUser);
     } catch (err: any) {
       const msg = err?.message || 'Failed to create account. Please try again.';

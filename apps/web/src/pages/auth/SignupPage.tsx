@@ -5,7 +5,7 @@
  */
 
 import React, { useState } from 'react';
-import { Mail, Lock, User, AtSign, ArrowRight, AlertCircle } from 'lucide-react';
+import { Mail, Lock, User, ArrowRight, AlertCircle } from 'lucide-react';
 import { Input } from '../../components/ui/Input';
 import { Button } from '../../components/ui/Button';
 import { Logo } from '../../components/ui/Logo';
@@ -21,7 +21,6 @@ export const SignupPage: React.FC<SignupPageProps> = ({ onNavigate }) => {
   const { showToast } = useToast();
 
   const [name, setName] = useState('');
-  const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [formError, setFormError] = useState<string | null>(null);
@@ -30,19 +29,8 @@ export const SignupPage: React.FC<SignupPageProps> = ({ onNavigate }) => {
     e.preventDefault();
     setFormError(null);
 
-    const cleanUsername = username.trim().toLowerCase().replace(/^@/, '');
-    if (!name.trim() || !cleanUsername || !email.trim() || !password) {
+    if (!name.trim() || !email.trim() || !password) {
       setFormError('Please fill in all required fields.');
-      return;
-    }
-
-    if (cleanUsername.length < 3) {
-      setFormError('Username must be at least 3 characters long.');
-      return;
-    }
-
-    if (!/^[a-z0-9_]+$/.test(cleanUsername)) {
-      setFormError('Username may only contain letters, numbers, and underscores.');
       return;
     }
 
@@ -52,7 +40,7 @@ export const SignupPage: React.FC<SignupPageProps> = ({ onNavigate }) => {
     }
 
     try {
-      await signUp(email.trim(), password, name.trim(), cleanUsername);
+      await signUp(email.trim(), password, name.trim());
       showToast('Account created successfully', 'success');
       onNavigate('/');
     } catch (err: any) {
@@ -93,18 +81,6 @@ export const SignupPage: React.FC<SignupPageProps> = ({ onNavigate }) => {
             icon={<User className="w-4 h-4" />}
             required
             autoComplete="name"
-          />
-
-          <Input
-            label="Username"
-            type="text"
-            placeholder="jordanh"
-            value={username}
-            onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/\s+/g, ''))}
-            icon={<AtSign className="w-4 h-4" />}
-            helperText="Public unique handle (letters, numbers, underscore)"
-            required
-            autoComplete="username"
           />
 
           <Input
