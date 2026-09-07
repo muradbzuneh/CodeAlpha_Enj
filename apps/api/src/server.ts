@@ -5,8 +5,32 @@ import { toNodeHandler } from "better-auth/node";
 
 const authHandler = toNodeHandler(auth);
 
+const ALLOWED_ORIGIN = "http://localhost:3000";
+
+function setCorsHeaders(res: import("http").ServerResponse, origin: string | undefined) {
+  if (origin === ALLOWED_ORIGIN) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+  }
+  res.setHeader("Access-Control-Allow-Credentials", "true");
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, PATCH, PUT, DELETE, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, Accept");
+  res.setHeader("Access-Control-Max-Age", "86400");
+}
+
 const server = createServer(async (req, res) => {
   try {
+    const origin = req.headers.origin;
+
+    // Handle CORS preflight for ALL routes (including /api/auth)
+    if (req.method === "OPTIONS") {
+      setCorsHeaders(res, origin);
+      res.writeHead(204);
+      res.end();
+      return;
+    }
+
+    setCorsHeaders(res, origin);
+
     if (req.url?.startsWith("/api/auth")) {
       await authHandler(req, res);
     } else {
