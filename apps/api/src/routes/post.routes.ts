@@ -13,6 +13,7 @@ import { getTrendingPosts } from "../controllers/trending.controller.js";
 import { requireAuth } from "../middleware/require-auth.js";
 import { validateBody } from "../middleware/validate.js";
 
+import { optionalAuth } from "../middleware/optional-auth.js";
 import {
   createPostSchema,
   updatePostSchema,
@@ -20,13 +21,13 @@ import {
 
 export const postRouter = Router();
 
-postRouter.get("/", getPosts);
+postRouter.get("/", optionalAuth, getPosts);
 
 // Static routes MUST come before /:id to avoid param capture
 postRouter.get("/liked", requireAuth, getLikedPosts);
-postRouter.get("/trending", getTrendingPosts);
+postRouter.get("/trending", optionalAuth, getTrendingPosts);
 
-postRouter.get("/:id", getPostById);
+postRouter.get("/:id", optionalAuth, getPostById);
 
 postRouter.post(
   "/",

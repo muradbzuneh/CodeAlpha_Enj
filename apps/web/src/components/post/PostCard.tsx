@@ -20,7 +20,7 @@ export interface PostCardProps {
   onPostUpdated?: (updated: Post) => void;
   onPostDeleted?: (postId: string) => void;
   onCommentClick?: (post: Post) => void;
-  onProfileClick?: (username: string) => void;
+  onProfileClick?: (username: string | null) => void;
   onEditClick?: (post: Post) => void;
 }
 

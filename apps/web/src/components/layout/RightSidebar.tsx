@@ -15,7 +15,7 @@ import { api } from '../../services/api';
 import type { User } from '../../types';
 
 export interface RightSidebarProps {
-  onProfileClick: (username: string) => void;
+  onProfileClick: (username: string | null) => void;
   onTopicClick?: (topic: string) => void;
 }
 

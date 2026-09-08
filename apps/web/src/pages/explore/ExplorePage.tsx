@@ -14,7 +14,7 @@ import { api } from '../../services/api';
 import type { Post } from '../../types';
 
 export interface ExplorePageProps {
-  onProfileClick: (username: string) => void;
+  onProfileClick: (username: string | null) => void;
   onCommentClick: (post: Post) => void;
   onEditClick: (post: Post) => void;
 }

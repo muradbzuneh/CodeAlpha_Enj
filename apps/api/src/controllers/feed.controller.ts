@@ -56,6 +56,10 @@ export async function getPersonalizedFeed(
               image: true,
             },
           },
+          likes: {
+            where: { userId: currentUser.id },
+            select: { id: true },
+          },
           _count: {
             select: {
               comments: true,
@@ -74,11 +78,17 @@ export async function getPersonalizedFeed(
       }),
     ]);
 
+    const data = posts.map((p) => ({
+      ...p,
+      isLiked: p.likes.length > 0,
+      likes: undefined,
+    }));
+
     const totalPages = Math.ceil(total / limit);
 
     return res.json({
       status: "success",
-      data: posts,
+      data,
       pagination: {
         page,
         limit,

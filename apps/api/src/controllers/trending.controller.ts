@@ -19,6 +19,7 @@ import { feedQuerySchema } from "../schemas/post.schema.js";
  */
 export async function getTrendingPosts(req: Request, res: Response) {
   try {
+    const currentUser = res.locals.session?.user;
     const parsed = feedQuerySchema.safeParse(req.query);
     if (!parsed.success) {
       return res.status(400).json({
@@ -105,15 +106,24 @@ export async function getTrendingPosts(req: Request, res: Response) {
             image: true,
           },
         },
+        likes: currentUser
+          ? { where: { userId: currentUser.id }, select: { id: true } }
+          : false,
         _count: {
           select: { comments: true, likes: true },
         },
       },
     });
 
+    const data = fullPosts.map((p) => ({
+      ...p,
+      isLiked: currentUser ? (p as any).likes?.length > 0 : false,
+      likes: undefined,
+    }));
+
     // Preserve the score-based ordering from the raw query
     const postOrder = new Map(posts.map((p, i) => [p.id, i]));
-    const orderedPosts = fullPosts.sort(
+    const orderedPosts = data.sort(
       (a, b) => (postOrder.get(a.id) ?? 0) - (postOrder.get(b.id) ?? 0),
     );
 

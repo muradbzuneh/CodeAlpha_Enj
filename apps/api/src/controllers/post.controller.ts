@@ -52,6 +52,7 @@ export async function createPost(req: Request, res: Response) {
 
 export async function getPosts(req: Request, res: Response) {
   try {
+    const currentUser = res.locals.session?.user;
     const parsed = feedQuerySchema.safeParse(req.query);
 
     if (!parsed.success) {
@@ -85,6 +86,10 @@ export async function getPosts(req: Request, res: Response) {
             },
           },
 
+          likes: currentUser
+            ? { where: { userId: currentUser.id }, select: { id: true } }
+            : false,
+
           _count: {
             select: {
               comments: true,
@@ -97,12 +102,18 @@ export async function getPosts(req: Request, res: Response) {
       prisma.post.count(),
     ]);
 
+    const data = posts.map((p) => ({
+      ...p,
+      isLiked: currentUser ? (p as any).likes?.length > 0 : false,
+      likes: undefined,
+    }));
+
     const totalPages = Math.ceil(total / limit);
 
     return res.json({
       status: "success",
 
-      data: posts,
+      data,
 
       pagination: {
         page,
@@ -125,6 +136,7 @@ export async function getPosts(req: Request, res: Response) {
 
 export async function getPostById(req: Request, res: Response) {
   try {
+    const currentUser = res.locals.session?.user;
     const parsed = postIdSchema.safeParse(req.params);
 
     if (!parsed.success) {
@@ -166,6 +178,10 @@ export async function getPostById(req: Request, res: Response) {
           },
         },
 
+        likes: currentUser
+          ? { where: { userId: currentUser.id }, select: { id: true } }
+          : false,
+
         _count: {
           select: {
             comments: true,
@@ -182,9 +198,11 @@ export async function getPostById(req: Request, res: Response) {
       });
     }
 
+    const isLiked = currentUser ? (post as any).likes?.length > 0 : false;
+
     return res.json({
       status: "success",
-      data: post,
+      data: { ...post, likes: undefined, isLiked },
     });
   } catch (error) {
     console.error("GET POST ERROR:", error);

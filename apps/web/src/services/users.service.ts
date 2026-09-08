@@ -37,8 +37,9 @@ interface BackendPost {
   authorId: string;
   createdAt: string;
   updatedAt?: string;
-  author: { id: string; name: string; username: string; image?: string | null };
+  author: { id: string; name: string; username: string | null; image?: string | null };
   _count?: { comments: number; likes: number };
+  isLiked?: boolean;
 }
 
 function normalizePost(data: BackendPost): Post {
@@ -51,7 +52,7 @@ function normalizePost(data: BackendPost): Post {
     author: data.author,
     likesCount: data._count?.likes ?? 0,
     commentsCount: data._count?.comments ?? 0,
-    isLiked: false,
+    isLiked: data.isLiked ?? false,
     mediaUrl: null,
   };
 }

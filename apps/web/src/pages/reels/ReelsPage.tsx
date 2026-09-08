@@ -103,7 +103,7 @@ const SAMPLE_REELS: ReelItem[] = [
 ];
 
 export interface ReelsPageProps {
-  onProfileClick: (username: string) => void;
+  onProfileClick: (username: string | null) => void;
   onCommentClick?: (reel: ReelItem) => void;
 }
 
