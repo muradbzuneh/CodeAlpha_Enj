@@ -1,0 +1,210 @@
+/**
+ * ENJ Social Media Platform - Main Application Component
+ * Integrates with Express + Prisma + Better Auth backend.
+ * Provides ThemeProvider (Light by default, Dark selectable), AuthProvider, and ToastProvider.
+ */
+
+import React, { useState, useEffect, useCallback } from 'react';
+import { ThemeProvider } from './context/ThemeContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import { ToastProvider } from './context/ToastContext';
+import { MainLayout } from './components/layout/MainLayout';
+import { HomeFeedPage } from './pages/home/HomeFeedPage';
+import { ExplorePage } from './pages/explore/ExplorePage';
+import { ProfilePage } from './pages/profile/ProfilePage';
+import { SettingsProfilePage } from './pages/settings/SettingsProfilePage';
+import { LoginPage } from './pages/auth/LoginPage';
+import { SignupPage } from './pages/auth/SignupPage';
+import { SearchPage } from './pages/search/SearchPage';
+import { ReelsPage } from './pages/reels/ReelsPage';
+import { HumanizePage } from './pages/humanize/HumanizePage';
+import { PostDetailModal } from './components/post/PostDetailModal';
+import { EditPostModal } from './components/post/EditPostModal';
+import type { Post } from './types';
+
+function RouterApp() {
+  const { user, isLoading: isAuthLoading } = useAuth();
+
+  // Route state
+  const [currentPath, setCurrentPath] = useState<string>(() => {
+    return window.location.pathname || '/';
+  });
+
+  // Active post for discussion modal
+  const [activeDiscussionPost, setActiveDiscussionPost] = useState<Post | null>(null);
+
+  // Active post for edit modal
+  const [activeEditPost, setActiveEditPost] = useState<Post | null>(null);
+
+  // Post newly created from global composer to immediately update feed
+  const [newlyCreatedPost, setNewlyCreatedPost] = useState<Post | null>(null);
+
+  // Search query state
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // Global composer modal state
+  const [isComposeOpen, setIsComposeOpen] = useState(false);
+  const [initialComposeText, setInitialComposeText] = useState('');
+
+  // Handle browser popstate
+  useEffect(() => {
+    const handlePopState = () => {
+      setCurrentPath(window.location.pathname || '/');
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  const navigate = useCallback((to: string) => {
+    if (to !== window.location.pathname) {
+      window.history.pushState({}, '', to);
+    }
+    setCurrentPath(to);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
+
+  // Protected route redirects
+  useEffect(() => {
+    if (!isAuthLoading) {
+      if ((currentPath === '/settings' || currentPath.startsWith('/settings')) && !user) {
+        navigate('/login');
+      }
+    }
+  }, [currentPath, user, isAuthLoading, navigate]);
+
+  // Determine current view
+  let pageContent: React.ReactNode = null;
+
+  if (currentPath === '/login') {
+    pageContent = <LoginPage onNavigate={navigate} />;
+  } else if (currentPath === '/signup') {
+    pageContent = <SignupPage onNavigate={navigate} />;
+  } else if (currentPath === '/reels') {
+    pageContent = (
+      <ReelsPage
+        onProfileClick={(username) => navigate(`/profile/${username}`)}
+      />
+    );
+  } else if (currentPath === '/humanize') {
+    pageContent = (
+      <HumanizePage
+        onOpenComposeWithText={(text) => {
+          setInitialComposeText(text);
+          setIsComposeOpen(true);
+        }}
+      />
+    );
+  } else if (currentPath === '/explore') {
+    pageContent = (
+      <ExplorePage
+        onProfileClick={(username) => navigate(`/profile/${username}`)}
+        onCommentClick={(post) => setActiveDiscussionPost(post)}
+        onEditClick={(post) => setActiveEditPost(post)}
+      />
+    );
+  } else if (currentPath.startsWith('/profile/')) {
+    const username = currentPath.replace('/profile/', '').split('/')[0] || '';
+    pageContent = (
+      <ProfilePage
+        username={username}
+        onNavigate={navigate}
+        onCommentClick={(post) => setActiveDiscussionPost(post)}
+        onEditClick={(post) => setActiveEditPost(post)}
+      />
+    );
+  } else if (currentPath === '/settings' || currentPath.startsWith('/settings')) {
+    pageContent = <SettingsProfilePage onNavigate={navigate} />;
+  } else if (currentPath === '/search') {
+    pageContent = (
+      <SearchPage
+        initialQuery={searchQuery}
+        onProfileClick={(username) => navigate(`/profile/${username}`)}
+        onCommentClick={(post) => setActiveDiscussionPost(post)}
+        onEditClick={(post) => setActiveEditPost(post)}
+      />
+    );
+  } else {
+    // Default Home / Feed
+    pageContent = (
+      <HomeFeedPage
+        onProfileClick={(username) => navigate(`/profile/${username}`)}
+        onCommentClick={(post) => setActiveDiscussionPost(post)}
+        onEditClick={(post) => setActiveEditPost(post)}
+        newlyCreatedPost={newlyCreatedPost}
+      />
+    );
+  }
+
+  const isAuthPage = currentPath === '/login' || currentPath === '/signup';
+
+  return (
+    <>
+      {isAuthPage ? (
+        <div className="min-h-screen bg-white dark:bg-[#0f1115] text-slate-900 dark:text-[#e1e1e1] transition-colors">
+          {pageContent}
+        </div>
+      ) : (
+        <MainLayout
+          currentPath={currentPath}
+          onNavigate={navigate}
+          onPostCreated={(post) => setNewlyCreatedPost(post)}
+          searchQuery={searchQuery}
+          onSearchChange={(val) => setSearchQuery(val)}
+          onSearchSubmit={() => navigate('/search')}
+          isComposeOpen={isComposeOpen}
+          onOpenCompose={() => {
+            setInitialComposeText('');
+            setIsComposeOpen(true);
+          }}
+          onCloseCompose={() => setIsComposeOpen(false)}
+          initialComposeText={initialComposeText}
+        >
+          {pageContent}
+        </MainLayout>
+      )}
+
+      {/* Discussion / Comments Modal */}
+      <PostDetailModal
+        post={activeDiscussionPost}
+        isOpen={Boolean(activeDiscussionPost)}
+        onClose={() => setActiveDiscussionPost(null)}
+        onPostUpdated={(updated) => {
+          setActiveDiscussionPost(updated);
+          setNewlyCreatedPost(updated);
+        }}
+        onPostDeleted={() => {
+          setActiveDiscussionPost(null);
+        }}
+        onProfileClick={(username) => {
+          navigate(`/profile/${username}`);
+        }}
+        onEditClick={(post) => {
+          setActiveDiscussionPost(null);
+          setActiveEditPost(post);
+        }}
+      />
+
+      {/* Edit Post Modal */}
+      <EditPostModal
+        post={activeEditPost}
+        isOpen={Boolean(activeEditPost)}
+        onClose={() => setActiveEditPost(null)}
+        onPostUpdated={(updated) => {
+          setNewlyCreatedPost(updated);
+        }}
+      />
+    </>
+  );
+}
+
+export default function App() {
+  return (
+    <ThemeProvider>
+      <AuthProvider>
+        <ToastProvider>
+          <RouterApp />
+        </ToastProvider>
+      </AuthProvider>
+    </ThemeProvider>
+  );
+}

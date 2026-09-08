@@ -11,8 +11,10 @@ export async function getProfile(req: Request, res: Response) {
       });
     }
 
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
+    const user = await prisma.user.findFirst({
+      where: {
+        OR: [{ id: userId }, { username: userId }],
+      },
       select: {
         id: true,
         name: true,
@@ -33,7 +35,27 @@ export async function getProfile(req: Request, res: Response) {
       });
     }
 
-    return res.json({ status: "success", data: user });
+    const currentUser = res.locals.session?.user;
+    let isFollowing = false;
+    let isOwnProfile = false;
+
+    if (currentUser) {
+      isOwnProfile = currentUser.id === user.id;
+      if (!isOwnProfile) {
+        const follow = await prisma.follow.findUnique({
+          where: {
+            followerId_followingId: {
+              followerId: currentUser.id,
+              followingId: user.id,
+            },
+          },
+          select: { id: true },
+        });
+        isFollowing = !!follow;
+      }
+    }
+
+    return res.json({ status: "success", data: { ...user, isFollowing, isOwnProfile } });
   } catch (error) {
     console.error("GET PROFILE ERROR:", error);
     return res.status(500).json({
@@ -58,7 +80,7 @@ export async function updateProfile(req: Request, res: Response) {
       const normalized = username.toLowerCase();
 
       if (normalized !== currentUser.username) {
-        const existing = await prisma.user.findUnique({
+        const existing = await prisma.user.findFirst({
           where: { username: normalized },
           select: { id: true },
         });
@@ -140,7 +162,7 @@ export async function checkUsername(req: Request, res: Response) {
       });
     }
 
-    const existing = await prisma.user.findUnique({
+    const existing = await prisma.user.findFirst({
       where: { username },
       select: { id: true },
     });
@@ -183,9 +205,23 @@ export async function getFollowers(req: Request, res: Response) {
       },
     });
 
+    const currentUser = res.locals.session?.user;
+    let followingIds = new Set<string>();
+
+    if (currentUser) {
+      const following = await prisma.follow.findMany({
+        where: { followerId: currentUser.id },
+        select: { followingId: true },
+      });
+      followingIds = new Set(following.map((f) => f.followingId));
+    }
+
     return res.json({
       status: "success",
-      data: followers.map((item) => item.follower),
+      data: followers.map((item) => ({
+        ...item.follower,
+        isFollowing: followingIds.has(item.follower.id),
+      })),
       count: followers.length,
     });
   } catch (error) {
@@ -222,9 +258,23 @@ export async function getFollowing(req: Request, res: Response) {
       },
     });
 
+    const currentUser = res.locals.session?.user;
+    let myFollowingIds = new Set<string>();
+
+    if (currentUser) {
+      const myFollowing = await prisma.follow.findMany({
+        where: { followerId: currentUser.id },
+        select: { followingId: true },
+      });
+      myFollowingIds = new Set(myFollowing.map((f) => f.followingId));
+    }
+
     return res.json({
       status: "success",
-      data: following.map((item) => item.following),
+      data: following.map((item) => ({
+        ...item.following,
+        isFollowing: myFollowingIds.has(item.following.id),
+      })),
       count: following.length,
     });
   } catch (error) {
