@@ -8,13 +8,12 @@
  */
 
 import React, { useState } from 'react';
-import { Search, LogIn, UserPlus, Plus, Sun, Moon, LogOut } from 'lucide-react';
+import { Search, LogIn, UserPlus, Plus, LogOut } from 'lucide-react';
 import { Logo } from '../ui/Logo';
 import { Avatar } from '../ui/Avatar';
 import { Button } from '../ui/Button';
 import { ConfirmDialog } from '../ui/ConfirmDialog';
 import { useAuth } from '../../context/AuthContext';
-import { useTheme } from '../../context/ThemeContext';
 
 export interface HeaderProps {
   onNavigate: (path: string) => void;
@@ -32,7 +31,6 @@ export const Header: React.FC<HeaderProps> = ({
   onSearchSubmit,
 }) => {
   const { user, signOut } = useAuth();
-  const { theme, toggleTheme } = useTheme();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   const handleSearchKeyDown = (e: React.KeyboardEvent) => {
@@ -82,21 +80,6 @@ export const Header: React.FC<HeaderProps> = ({
 
         {/* Right side actions */}
         <div className="flex items-center gap-2 sm.gap-3">
-          {/* Quick Light/Dark Mode Toggle */}
-          <button
-            type="button"
-            onClick={toggleTheme}
-            className="p-2 rounded-xl text-slate-500 hover.text-slate-900 dark.text-zinc-400 dark:hover.text-[#f3f4f6] hover.bg-slate-100 dark:hover.bg-[#22272e] transition-colors cursor-pointer"
-            title={`Switch to ${theme === 'light' ? 'Dark' : 'Light'} Mode`}
-            aria-label="Toggle Theme"
-          >
-            {theme === 'light' ? (
-              <Moon className="w-4 h-4" />
-            ) : (
-              <Sun className="w-4 h-4 text-amber-400" />
-            )}
-          </button>
-
           {user ? (
             <>
               {onOpenCompose && (
