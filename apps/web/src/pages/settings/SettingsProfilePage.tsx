@@ -79,13 +79,17 @@ export const SettingsProfilePage: React.FC<SettingsProfilePageProps> = ({ onNavi
 
     setIsSaving(true);
     try {
-      const updatedUser = await api.profile.update({
+      const updatedProfile = await api.users.updateProfile({
         username: cleanUsername,
         name: name.trim(),
         bio: bio.trim(),
       });
 
-      updateCurrentUser(updatedUser);
+      updateCurrentUser({
+        username: updatedProfile.username,
+        name: updatedProfile.name,
+        bio: updatedProfile.bio,
+      });
       showToast('Profile updated successfully', 'success');
       onNavigate(user.username ? `/profile/${user.username}` : '/');
     } catch (err: any) {
