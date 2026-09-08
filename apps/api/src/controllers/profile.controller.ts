@@ -80,7 +80,7 @@ export async function updateProfile(req: Request, res: Response) {
       const normalized = username.toLowerCase();
 
       if (normalized !== currentUser.username) {
-        const existing = await prisma.user.findUnique({
+        const existing = await prisma.user.findFirst({
           where: { username: normalized },
           select: { id: true },
         });
@@ -162,7 +162,7 @@ export async function checkUsername(req: Request, res: Response) {
       });
     }
 
-    const existing = await prisma.user.findUnique({
+    const existing = await prisma.user.findFirst({
       where: { username },
       select: { id: true },
     });
