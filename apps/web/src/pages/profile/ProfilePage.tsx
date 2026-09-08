@@ -235,7 +235,10 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                     post={post}
                     onPostUpdated={handlePostUpdated}
                     onPostDeleted={handlePostDeleted}
-                    onProfileClick={(u) => onNavigate(`/profile/${u}`)}
+                    onProfileClick={(u) => {
+                      if (u) onNavigate(`/profile/${u}`);
+                      else onNavigate('/settings/profile');
+                    }}
                     onCommentClick={onCommentClick}
                     onEditClick={onEditClick}
                   />
@@ -304,7 +307,10 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                     post={post}
                     onPostUpdated={handlePostUpdated}
                     onPostDeleted={handlePostDeleted}
-                    onProfileClick={(u) => onNavigate(`/profile/${u}`)}
+                    onProfileClick={(u) => {
+                      if (u) onNavigate(`/profile/${u}`);
+                      else onNavigate('/settings/profile');
+                    }}
                     onCommentClick={onCommentClick}
                     onEditClick={onEditClick}
                   />
@@ -320,7 +326,10 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
               type={followModalType}
               userId={profile.id}
               onClose={() => setFollowModalType(null)}
-              onUserClick={(u) => onNavigate(`/profile/${u}`)}
+              onUserClick={(u) => {
+                if (u) onNavigate(`/profile/${u}`);
+                else onNavigate('/settings/profile');
+              }}
             />
           )}
 
