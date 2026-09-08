@@ -23,6 +23,8 @@ model User {
   posts    Post[]
   comments Comment[]
   likes    Like[]
+  stories  Story[]
+  storyViews StoryView[]
 
   followers Follow[] @relation("UserFollowers")
   following Follow[] @relation("UserFollowing")
@@ -147,4 +149,41 @@ model Follow {
   @@index([followerId])
   @@index([followingId])
   @@map("follow")
+}
+
+model Story {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+
+  authorId String
+  author   User   @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  content    String?
+  mediaUrl   String?
+  gradient   String   @default("from-[#FF3366] via-[#FF5E7E] to-[#FFAA00]")
+  moodEmoji  String?
+
+  views StoryView[]
+
+  @@index([authorId])
+  @@index([createdAt])
+  @@index([expiresAt])
+  @@map("story")
+}
+
+model StoryView {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+
+  storyId String
+  story   Story  @relation(fields: [storyId], references: [id], onDelete: Cascade)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([storyId, userId])
+  @@index([storyId])
+  @@index([userId])
+  @@map("story_view")
 }
