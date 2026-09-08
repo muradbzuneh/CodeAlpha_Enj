@@ -1,5 +1,5 @@
 import { apiClient } from "@/lib/api/client";
-import type { User, Profile, Post, FollowUserItem } from "@/types";
+import type { Profile, Post, FollowUserItem } from "@/types";
 import type { UpdateProfileInput, Paginated } from "@/types/api";
 
 interface BackendProfile {
