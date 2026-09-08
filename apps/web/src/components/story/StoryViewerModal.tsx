@@ -1,17 +1,5 @@
-/**
- * Interactive Story Viewer Modal for ENJ.
- * 
- * Features:
- * - Sequential story playback with progress bar (auto-advancing)
- * - Pause on touch/press
- * - Left/Right click navigation
- * - Heart & emoji reactions with floating burst effects
- * - Direct reply input
- * - Delete action for story author
- */
-
-import React, { useState, useEffect, useRef } from 'react';
-import { X, ChevronLeft, ChevronRight, Heart, Send, Trash2, Sparkles } from 'lucide-react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { X, ChevronLeft, ChevronRight, Heart, Send, Trash2 } from 'lucide-react';
 import { Avatar } from '../ui/Avatar';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
@@ -26,8 +14,9 @@ export interface StoryViewerModalProps {
   onStoryDeleted?: (storyId: string) => void;
 }
 
-const STORY_DURATION_MS = 6000;
+const STORY_DURATION_MS = 5000;
 const REACTION_EMOJIS = ['❤️', '🔥', '👏', '😂', '😮', '💯'];
+const SWIPE_THRESHOLD = 50;
 
 export const StoryViewerModal: React.FC<StoryViewerModalProps> = ({
   isOpen,
@@ -45,21 +34,39 @@ export const StoryViewerModal: React.FC<StoryViewerModalProps> = ({
   const [replyText, setReplyText] = useState('');
   const [floatingEmojis, setFloatingEmojis] = useState<{ id: number; emoji: string; x: number }[]>([]);
 
+  const touchStartX = useRef(0);
+  const touchStartY = useRef(0);
+  const containerRef = useRef<HTMLDivElement>(null);
+
   const currentStory = stories[currentIndex];
+
+  const goToNext = useCallback(() => {
+    if (currentIndex < stories.length - 1) {
+      setCurrentIndex((prev) => prev + 1);
+      setProgress(0);
+    } else {
+      onClose();
+    }
+  }, [currentIndex, stories.length, onClose]);
+
+  const goToPrev = useCallback(() => {
+    if (currentIndex > 0) {
+      setCurrentIndex((prev) => prev - 1);
+      setProgress(0);
+    }
+  }, [currentIndex]);
 
   useEffect(() => {
     setCurrentIndex(initialIndex);
     setProgress(0);
   }, [initialIndex, isOpen]);
 
-  // Mark story as viewed
   useEffect(() => {
     if (isOpen && currentStory) {
       api.stories.markViewed(currentStory.id).catch(() => {});
     }
   }, [isOpen, currentStory?.id]);
 
-  // Auto-advance progress timer
   useEffect(() => {
     if (!isOpen || isPaused || !currentStory) return;
 
@@ -69,7 +76,6 @@ export const StoryViewerModal: React.FC<StoryViewerModalProps> = ({
     const timer = setInterval(() => {
       setProgress((prev) => {
         if (prev + step >= 100) {
-          // Advance to next story if available
           if (currentIndex < stories.length - 1) {
             setCurrentIndex((curr) => curr + 1);
             return 0;
@@ -87,31 +93,32 @@ export const StoryViewerModal: React.FC<StoryViewerModalProps> = ({
 
   if (!isOpen || !currentStory) return null;
 
-  const handlePrev = (e?: React.MouseEvent) => {
-    e?.stopPropagation();
-    if (currentIndex > 0) {
-      setCurrentIndex((prev) => prev - 1);
-      setProgress(0);
-    }
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+    touchStartY.current = e.touches[0].clientY;
+    setIsPaused(true);
   };
 
-  const handleNext = (e?: React.MouseEvent) => {
-    e?.stopPropagation();
-    if (currentIndex < stories.length - 1) {
-      setCurrentIndex((prev) => prev + 1);
-      setProgress(0);
-    } else {
-      onClose();
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    const deltaX = e.changedTouches[0].clientX - touchStartX.current;
+    const deltaY = e.changedTouches[0].clientY - touchStartY.current;
+
+    if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > SWIPE_THRESHOLD) {
+      if (deltaX < 0) {
+        goToNext();
+      } else {
+        goToPrev();
+      }
     }
+
+    setIsPaused(false);
   };
 
   const handleReact = (emoji: string) => {
     const id = Date.now();
-    const x = Math.random() * 60 + 20; // 20% to 80%
+    const x = Math.random() * 60 + 20;
     setFloatingEmojis((prev) => [...prev, { id, emoji, x }]);
-
-    showToast(`Reacted ${emoji} to @${currentStory.author.username}'s story`, 'info');
-
+    showToast(`Reacted ${emoji}`, 'info');
     setTimeout(() => {
       setFloatingEmojis((prev) => prev.filter((item) => item.id !== id));
     }, 1500);
@@ -120,8 +127,7 @@ export const StoryViewerModal: React.FC<StoryViewerModalProps> = ({
   const handleSendReply = (e: React.FormEvent) => {
     e.preventDefault();
     if (!replyText.trim()) return;
-
-    showToast(`Reply sent to @${currentStory.author.username}!`, 'success');
+    showToast(`Reply sent to @${currentStory.author.username}`, 'success');
     setReplyText('');
   };
 
@@ -133,7 +139,7 @@ export const StoryViewerModal: React.FC<StoryViewerModalProps> = ({
       if (stories.length <= 1) {
         onClose();
       } else {
-        handleNext();
+        goToNext();
       }
     } catch (err: any) {
       showToast('Failed to delete story', 'error');
@@ -142,7 +148,6 @@ export const StoryViewerModal: React.FC<StoryViewerModalProps> = ({
 
   const isOwnStory = user?.id === currentStory.authorId;
 
-  // Format creation time
   const timeDiffHours = Math.max(
     1,
     Math.round((Date.now() - new Date(currentStory.createdAt).getTime()) / (1000 * 60 * 60))
@@ -150,46 +155,47 @@ export const StoryViewerModal: React.FC<StoryViewerModalProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/90 backdrop-blur-md select-none animate-in fade-in duration-200"
+      className="fixed inset-0 z-50 flex items-center justify-center sm:p-6 bg-black/95 sm:bg-black/90 sm:backdrop-blur-md select-none animate-in fade-in duration-200"
       onClick={onClose}
     >
       {/* Floating Reaction Emojis */}
-      <div className="absolute inset-0 pointer-events-none z-60 overflow-hidden">
+      <div className="absolute inset-0 pointer-events-none z-[60] overflow-hidden">
         {floatingEmojis.map((item) => (
           <div
             key={item.id}
-            style={{ left: `${item.x}%`, bottom: '15%' }}
-            className="absolute text-4xl animate-bounce transition-all duration-1000 ease-out"
+            style={{ left: `${item.x}%`, bottom: '20%' }}
+            className="absolute text-5xl animate-bounce"
           >
             {item.emoji}
           </div>
         ))}
       </div>
 
-      {/* Main Container */}
+      {/* Main Container — full screen on mobile, card on desktop */}
       <div
-        className="relative w-full max-w-sm h-[85vh] max-h-[640px] rounded-3xl overflow-hidden shadow-2xl flex flex-col justify-between"
+        ref={containerRef}
+        className="relative w-full h-full sm:w-full sm:max-w-sm sm:h-[85vh] sm:max-h-[700px] sm:rounded-3xl overflow-hidden shadow-2xl flex flex-col justify-between"
         onClick={(e) => e.stopPropagation()}
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
         onMouseDown={() => setIsPaused(true)}
         onMouseUp={() => setIsPaused(false)}
-        onTouchStart={() => setIsPaused(true)}
-        onTouchEnd={() => setIsPaused(false)}
       >
         {/* Background gradient or image */}
-        <div className={`absolute inset-0 bg-gradient-to-tr ${currentStory.gradient} -z-10`} />
+        <div className={`absolute inset-0 bg-gradient-to-br ${currentStory.gradient} -z-10`} />
 
         {currentStory.mediaUrl && (
           <img
             src={currentStory.mediaUrl}
-            alt="Story visual"
-            className="absolute inset-0 w-full h-full object-cover mix-blend-overlay opacity-85 -z-10"
+            alt=""
+            className="absolute inset-0 w-full h-full object-cover -z-[5]"
           />
         )}
 
-        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-black/80 pointer-events-none -z-5" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-black/70 pointer-events-none -z-[3]" />
 
         {/* Top Segmented Progress Bar */}
-        <div className="relative z-20 p-3 pt-3 flex items-center gap-1.5">
+        <div className="relative z-20 p-3 pt-3 flex items-center gap-1">
           {stories.map((s, idx) => {
             let widthPercent = 0;
             if (idx < currentIndex) widthPercent = 100;
@@ -198,10 +204,10 @@ export const StoryViewerModal: React.FC<StoryViewerModalProps> = ({
             return (
               <div
                 key={s.id}
-                className="flex-1 h-1 bg-white/30 rounded-full overflow-hidden"
+                className="flex-1 h-[2px] bg-white/30 rounded-full overflow-hidden"
               >
                 <div
-                  className="h-full bg-white transition-all duration-75"
+                  className="h-full bg-white transition-all duration-75 ease-linear"
                   style={{ width: `${widthPercent}%` }}
                 />
               </div>
@@ -210,18 +216,15 @@ export const StoryViewerModal: React.FC<StoryViewerModalProps> = ({
         </div>
 
         {/* Author Header */}
-        <div className="relative z-20 px-3.5 flex items-center justify-between text-white">
-          <div className="flex items-center gap-2.5 min-w-0">
+        <div className="relative z-20 px-4 flex items-center justify-between text-white">
+          <div className="flex items-center gap-3 min-w-0">
             <Avatar src={currentStory.author.image} name={currentStory.author.name} size="sm" />
             <div className="min-w-0">
-              <div className="flex items-center gap-1.5">
-                <span className="text-xs font-bold truncate leading-tight">
-                  {currentStory.author.name}
-                </span>
-                <span className="text-[10px] text-white/70">· {timeDiffHours}h</span>
-              </div>
-              <span className="text-[10px] text-white/80 truncate block leading-tight">
-                @{currentStory.author.username}
+              <span className="text-[13px] font-bold truncate leading-tight block">
+                {currentStory.author.name}
+              </span>
+              <span className="text-[10px] text-white/60 leading-tight">
+                {timeDiffHours}h ago
               </span>
             </div>
           </div>
@@ -231,50 +234,46 @@ export const StoryViewerModal: React.FC<StoryViewerModalProps> = ({
               <button
                 type="button"
                 onClick={handleDeleteStory}
-                className="p-1.5 rounded-full hover:bg-white/20 text-rose-300 hover:text-rose-200 transition-colors cursor-pointer"
+                className="p-2 rounded-full hover:bg-white/20 text-rose-300 hover:text-white transition-colors cursor-pointer"
                 aria-label="Delete your story"
               >
                 <Trash2 className="w-4 h-4" />
               </button>
             )}
-
             <button
               type="button"
               onClick={onClose}
-              className="p-1.5 rounded-full hover:bg-white/20 text-white transition-colors cursor-pointer"
-              aria-label="Close viewer"
+              className="p-2 rounded-full hover:bg-white/20 text-white transition-colors cursor-pointer"
+              aria-label="Close"
             >
               <X className="w-5 h-5" />
             </button>
           </div>
         </div>
 
-        {/* Center Content & Left/Right tap zones */}
-        <div className="relative z-20 flex-1 flex items-center justify-center p-6 text-center text-white">
+        {/* Center Content & Tap Zones */}
+        <div className="relative z-20 flex-1 flex items-center justify-center px-12 text-center text-white">
           {/* Tap navigation hotzones */}
           <div
             className="absolute left-0 top-0 bottom-0 w-1/3 cursor-pointer"
-            onClick={handlePrev}
-            aria-label="Previous story"
+            onClick={goToPrev}
           />
           <div
             className="absolute right-0 top-0 bottom-0 w-1/3 cursor-pointer"
-            onClick={handleNext}
-            aria-label="Next story"
+            onClick={goToNext}
           />
 
-          {/* Story Thought/Text */}
-          <div className="relative z-10 max-w-xs pointer-events-none">
+          {/* Story Content */}
+          <div className="relative z-10 max-w-[260px] pointer-events-none">
             {currentStory.moodEmoji && (
-              <div className="text-4xl mb-3 drop-shadow-md">{currentStory.moodEmoji}</div>
+              <div className="text-5xl mb-4 drop-shadow-lg">{currentStory.moodEmoji}</div>
             )}
-
             {currentStory.textContent && (
               <p
-                className={`font-bold drop-shadow-lg tracking-tight ${
+                className={`font-bold drop-shadow-lg ${
                   currentStory.textContent.length < 60
-                    ? 'text-xl sm:text-2xl leading-snug'
-                    : 'text-sm sm:text-base leading-relaxed'
+                    ? 'text-2xl sm:text-3xl leading-tight'
+                    : 'text-base sm:text-lg leading-relaxed'
                 }`}
               >
                 {currentStory.textContent}
@@ -284,16 +283,15 @@ export const StoryViewerModal: React.FC<StoryViewerModalProps> = ({
         </div>
 
         {/* Bottom Reaction & Reply Bar */}
-        <div className="relative z-20 p-3.5 pt-2 bg-gradient-to-t from-black/80 to-transparent space-y-2.5">
+        <div className="relative z-20 p-4 pt-2 bg-gradient-to-t from-black/80 via-black/30 to-transparent space-y-3">
           {/* Reaction Quick Bar */}
-          <div className="flex items-center justify-around px-2">
+          <div className="flex items-center justify-center gap-3">
             {REACTION_EMOJIS.map((emoji) => (
               <button
                 key={emoji}
                 type="button"
                 onClick={() => handleReact(emoji)}
-                className="text-xl hover:scale-130 active:scale-90 transition-transform cursor-pointer drop-shadow-sm p-1"
-                aria-label={`React ${emoji}`}
+                className="text-2xl hover:scale-125 active:scale-90 transition-transform cursor-pointer p-1"
               >
                 {emoji}
               </button>
@@ -309,37 +307,33 @@ export const StoryViewerModal: React.FC<StoryViewerModalProps> = ({
               onChange={(e) => setReplyText(e.target.value)}
               onFocus={() => setIsPaused(true)}
               onBlur={() => setIsPaused(false)}
-              className="flex-1 text-xs rounded-full border border-white/30 bg-black/40 px-4 py-2 text-white placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-white/40 backdrop-blur-sm"
+              className="flex-1 text-sm rounded-full border border-white/30 bg-white/10 px-4 py-2.5 text-white placeholder:text-white/50 focus:outline-none focus:border-white/60 backdrop-blur-sm"
             />
             <button
               type="submit"
               disabled={!replyText.trim()}
-              className="w-8 h-8 rounded-full bg-gradient-to-tr from-[#FF3366] to-[#FFAA00] text-white flex items-center justify-center hover:opacity-90 active:scale-95 disabled:opacity-40 disabled:pointer-events-none transition-all cursor-pointer shrink-0"
-              aria-label="Send reply"
+              className="w-9 h-9 rounded-full bg-white text-black flex items-center justify-center hover:bg-white/90 active:scale-95 disabled:opacity-30 disabled:pointer-events-none transition-all cursor-pointer shrink-0"
             >
-              <Send className="w-3.5 h-3.5" />
+              <Send className="w-4 h-4" />
             </button>
           </form>
         </div>
 
-        {/* Previous / Next Desktop Navigation Arrows */}
+        {/* Desktop Navigation Arrows */}
         {currentIndex > 0 && (
           <button
             type="button"
-            onClick={handlePrev}
-            className="hidden md:flex absolute -left-12 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/20 hover:bg-white/30 backdrop-blur-md text-white items-center justify-center cursor-pointer transition-all"
-            aria-label="Previous story"
+            onClick={goToPrev}
+            className="hidden sm:flex absolute -left-14 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md text-white items-center justify-center cursor-pointer transition-all"
           >
             <ChevronLeft className="w-5 h-5" />
           </button>
         )}
-
         {currentIndex < stories.length - 1 && (
           <button
             type="button"
-            onClick={handleNext}
-            className="hidden md:flex absolute -right-12 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/20 hover:bg-white/30 backdrop-blur-md text-white items-center justify-center cursor-pointer transition-all"
-            aria-label="Next story"
+            onClick={goToNext}
+            className="hidden sm:flex absolute -right-14 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md text-white items-center justify-center cursor-pointer transition-all"
           >
             <ChevronRight className="w-5 h-5" />
           </button>
