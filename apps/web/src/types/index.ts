@@ -7,7 +7,7 @@ export interface User {
   id: string;
   email: string;
   name: string;
-  username: string;
+  username: string | null;
   image?: string | null;
   bio?: string | null;
   createdAt: string;
@@ -16,7 +16,7 @@ export interface User {
 
 export interface Profile {
   id: string;
-  username: string;
+  username: string | null;
   name: string;
   bio?: string | null;
   image?: string | null;
@@ -31,7 +31,7 @@ export interface Profile {
 export interface PostAuthor {
   id: string;
   name: string;
-  username: string;
+  username: string | null;
   image?: string | null;
 }
 
@@ -60,7 +60,7 @@ export interface Comment {
 
 export interface FollowUserItem {
   id: string;
-  username: string;
+  username: string | null;
   name: string;
   image?: string | null;
   bio?: string | null;

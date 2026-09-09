@@ -14,7 +14,7 @@ export interface PostDetailModalProps {
   onClose: () => void;
   onPostUpdated: (updatedPost: Post) => void;
   onPostDeleted: (postId: string) => void;
-  onProfileClick: (username: string) => void;
+  onProfileClick: (username: string | null) => void;
   onEditClick: (post: Post) => void;
 }
 

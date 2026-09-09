@@ -17,7 +17,7 @@ import type { Comment, Post } from '../../types';
 export interface CommentSectionProps {
   post: Post;
   onPostUpdated?: (updatedPost: Post) => void;
-  onProfileClick?: (username: string) => void;
+  onProfileClick?: (username: string | null) => void;
 }
 
 export const CommentSection: React.FC<CommentSectionProps> = ({

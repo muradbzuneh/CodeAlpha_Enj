@@ -22,7 +22,7 @@ function normalizeComment(data: BackendComment): Comment {
     author: {
       id: data.author.id,
       name: data.author.name,
-      username: data.author.username ?? "",
+      username: data.author.username ?? null,
       image: data.author.image,
     },
   };

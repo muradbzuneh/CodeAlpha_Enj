@@ -1,11 +1,10 @@
 /**
  * Bottom Navigation Bar for mobile viewports (<768px).
- * Ensures essential navigation is reachable with thumb navigation.
- * Adaptive styling for both Default Light (White) mode and Dark mode.
+ * Icons: Home, Explore, Post (+), Likes, Profile
  */
 
 import React from 'react';
-import { Home, Film, Plus, Compass, User } from 'lucide-react';
+import { Home, Compass, Plus, Heart, User } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
 export interface MobileNavProps {
@@ -25,13 +24,14 @@ export const MobileNav: React.FC<MobileNavProps> = ({ currentPath, onNavigate, o
     requiresAuth?: boolean;
   }[] = [
     { label: 'Home', path: '/', icon: Home },
-    { label: 'Reels', path: '/reels', icon: Film },
-    { label: 'Post', path: '#post', icon: Plus, isAction: true },
     { label: 'Explore', path: '/explore', icon: Compass },
+    { label: 'Post', path: '#post', icon: Plus, isAction: true },
+    { label: 'Likes', path: '/liked', icon: Heart, requiresAuth: true },
     {
       label: 'Profile',
-      path: user ? (user.username ? `/profile/${user.username}` : '/settings/profile') : '/login',
+      path: user ? `/profile/${user.id}` : '/login',
       icon: User,
+      requiresAuth: true,
     },
   ];
 

@@ -95,7 +95,13 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
 
           {/* Right Sidebar */}
           <RightSidebar
-            onProfileClick={(username) => onNavigate(`/profile/${username}`)}
+            onProfileClick={(username) => {
+              if (username) {
+                onNavigate(`/profile/${username}`);
+              } else {
+                onNavigate('/settings/profile');
+              }
+            }}
             onTopicClick={(topic) => {
               if (onSearchChange) onSearchChange(`#${topic}`);
               onNavigate('/search');

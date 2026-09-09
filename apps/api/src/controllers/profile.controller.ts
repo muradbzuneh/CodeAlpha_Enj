@@ -285,3 +285,42 @@ export async function getFollowing(req: Request, res: Response) {
     });
   }
 }
+
+export async function getSuggestions(req: Request, res: Response) {
+  try {
+    const currentUser = res.locals.session?.user;
+    if (!currentUser) {
+      return res.json({ status: "success", data: [], count: 0 });
+    }
+
+    const following = await prisma.follow.findMany({
+      where: { followerId: currentUser.id },
+      select: { followingId: true },
+    });
+    const followingIds = following.map((f) => f.followingId);
+
+    const users = await prisma.user.findMany({
+      where: {
+        id: { not: currentUser.id, notIn: followingIds },
+      },
+      orderBy: { createdAt: "desc" },
+      take: 5,
+      select: {
+        id: true,
+        name: true,
+        username: true,
+        image: true,
+        bio: true,
+        _count: { select: { posts: true, followers: true, following: true } },
+      },
+    });
+
+    return res.json({ status: "success", data: users, count: users.length });
+  } catch (error) {
+    console.error("GET SUGGESTIONS ERROR:", error);
+    return res.status(500).json({
+      status: "error",
+      message: "Unable to fetch suggestions",
+    });
+  }
+}

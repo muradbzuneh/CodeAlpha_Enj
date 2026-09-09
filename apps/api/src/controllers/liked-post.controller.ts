@@ -47,7 +47,7 @@ export async function getLikedPosts(req: Request, res: Response) {
       prisma.like.count({ where: { userId: user.id } }),
     ]);
 
-    const posts = likes.map((like) => like.post);
+    const posts = likes.map((like) => ({ ...like.post, isLiked: true }));
     const totalPages = Math.ceil(total / limit);
 
     return res.json({

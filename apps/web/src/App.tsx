@@ -63,6 +63,14 @@ function RouterApp() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
 
+  const handleProfileClick = useCallback((identifier: string | null | undefined) => {
+    if (identifier) {
+      navigate(`/profile/${identifier}`);
+    } else {
+      navigate('/explore');
+    }
+  }, [navigate]);
+
   // Protected route redirects
   useEffect(() => {
     if (!isAuthLoading) {
@@ -82,7 +90,7 @@ function RouterApp() {
   } else if (currentPath === '/reels') {
     pageContent = (
       <ReelsPage
-        onProfileClick={(username) => navigate(`/profile/${username}`)}
+        onProfileClick={handleProfileClick}
       />
     );
   } else if (currentPath === '/humanize') {
@@ -97,7 +105,7 @@ function RouterApp() {
   } else if (currentPath === '/explore') {
     pageContent = (
       <ExplorePage
-        onProfileClick={(username) => navigate(`/profile/${username}`)}
+        onProfileClick={handleProfileClick}
         onCommentClick={(post) => setActiveDiscussionPost(post)}
         onEditClick={(post) => setActiveEditPost(post)}
       />
@@ -118,7 +126,7 @@ function RouterApp() {
     pageContent = (
       <SearchPage
         initialQuery={searchQuery}
-        onProfileClick={(username) => navigate(`/profile/${username}`)}
+        onProfileClick={handleProfileClick}
         onCommentClick={(post) => setActiveDiscussionPost(post)}
         onEditClick={(post) => setActiveEditPost(post)}
       />
@@ -127,7 +135,7 @@ function RouterApp() {
     // Default Home / Feed
     pageContent = (
       <HomeFeedPage
-        onProfileClick={(username) => navigate(`/profile/${username}`)}
+        onProfileClick={handleProfileClick}
         onCommentClick={(post) => setActiveDiscussionPost(post)}
         onEditClick={(post) => setActiveEditPost(post)}
         newlyCreatedPost={newlyCreatedPost}
@@ -175,9 +183,7 @@ function RouterApp() {
         onPostDeleted={() => {
           setActiveDiscussionPost(null);
         }}
-        onProfileClick={(username) => {
-          navigate(`/profile/${username}`);
-        }}
+        onProfileClick={handleProfileClick}
         onEditClick={(post) => {
           setActiveDiscussionPost(null);
           setActiveEditPost(post);

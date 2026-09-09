@@ -15,7 +15,7 @@ import type { Post, User as UserType } from '../../types';
 
 export interface SearchPageProps {
   initialQuery?: string;
-  onProfileClick: (username: string) => void;
+  onProfileClick: (username: string | null) => void;
   onCommentClick: (post: Post) => void;
   onEditClick: (post: Post) => void;
 }

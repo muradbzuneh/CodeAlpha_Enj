@@ -23,7 +23,7 @@ import { api } from '../../services/api';
 import type { Post, Story } from '../../types';
 
 export interface HomeFeedPageProps {
-  onProfileClick: (username: string) => void;
+  onProfileClick: (username: string | null) => void;
   onCommentClick: (post: Post) => void;
   onEditClick: (post: Post) => void;
   newlyCreatedPost?: Post | null;
@@ -121,7 +121,8 @@ export const HomeFeedPage: React.FC<HomeFeedPageProps> = ({
     ? posts
     : posts.filter((p) => {
         if (!user) return true;
-        const authorUsername = p.author.username.toLowerCase();
+        const authorUsername = p.author.username?.toLowerCase();
+        if (!authorUsername) return false;
         const isSelf = p.authorId === user.id || (user.username && authorUsername === user.username.toLowerCase());
         return isSelf || followingUsernames.has(authorUsername);
       });

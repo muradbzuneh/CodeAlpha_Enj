@@ -1,5 +1,5 @@
 import { apiClient } from "@/lib/api/client";
-import type { User, Profile, Post, FollowUserItem } from "@/types";
+import type { Profile, Post, FollowUserItem } from "@/types";
 import type { UpdateProfileInput, Paginated } from "@/types/api";
 
 interface BackendProfile {
@@ -37,8 +37,9 @@ interface BackendPost {
   authorId: string;
   createdAt: string;
   updatedAt?: string;
-  author: { id: string; name: string; username: string; image?: string | null };
+  author: { id: string; name: string; username: string | null; image?: string | null };
   _count?: { comments: number; likes: number };
+  isLiked?: boolean;
 }
 
 function normalizePost(data: BackendPost): Post {
@@ -51,7 +52,7 @@ function normalizePost(data: BackendPost): Post {
     author: data.author,
     likesCount: data._count?.likes ?? 0,
     commentsCount: data._count?.comments ?? 0,
-    isLiked: false,
+    isLiked: data.isLiked ?? false,
     mediaUrl: null,
   };
 }
@@ -114,5 +115,17 @@ export const usersService = {
   async updateProfile(input: UpdateProfileInput): Promise<Profile> {
     const res = await apiClient.patch<{ data: BackendProfile }>("/api/profile", input);
     return normalizeProfile(res.data);
+  },
+
+  async getSuggestions(): Promise<FollowUserItem[]> {
+    const res = await apiClient.get<{ data: BackendProfile[] }>("/api/suggestions");
+    return (res.data || []).map((u) => ({
+      id: u.id,
+      username: u.username,
+      name: u.name,
+      image: u.image ?? null,
+      bio: u.bio ?? null,
+      isFollowing: false,
+    }));
   },
 };
