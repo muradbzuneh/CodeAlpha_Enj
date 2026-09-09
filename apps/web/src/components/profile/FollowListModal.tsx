@@ -16,7 +16,7 @@ export interface FollowListModalProps {
   type: 'followers' | 'following';
   isOpen: boolean;
   onClose: () => void;
-  onUserClick: (username: string) => void;
+  onUserClick: (userId: string) => void;
 }
 
 export const FollowListModal: React.FC<FollowListModalProps> = ({
@@ -97,7 +97,7 @@ export const FollowListModal: React.FC<FollowListModalProps> = ({
                 key={item.id}
                 className="flex items-center justify-between py-3 cursor-pointer hover:bg-slate-50 dark:hover:bg-[#22272e] -mx-2 px-2 rounded-xl transition-colors"
                 onClick={() => {
-                  onUserClick(item.username);
+                  onUserClick(item.id);
                   onClose();
                 }}
               >

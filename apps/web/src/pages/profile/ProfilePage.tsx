@@ -87,6 +87,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
           }
         : null
     );
+    setTimeout(() => fetchProfileData(), 500);
   };
 
   const handlePostUpdated = (updated: Post) => {
@@ -340,8 +341,8 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
           type={followModalType}
           userId={profile.id}
           onClose={() => setFollowModalType(null)}
-          onUserClick={(u) => {
-            if (u) onNavigate(`/profile/${u}`);
+          onUserClick={(userId) => {
+            if (userId) onNavigate(`/profile/${userId}`);
           }}
         />
       )}

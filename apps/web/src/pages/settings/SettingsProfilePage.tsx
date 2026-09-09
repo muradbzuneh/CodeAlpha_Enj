@@ -5,13 +5,14 @@
  */
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Camera, Trash2, AlertCircle, Eye, EyeOff } from 'lucide-react';
+import { Camera, Trash2, AlertCircle, Eye, EyeOff, Sun, Moon } from 'lucide-react';
 import { Input } from '../../components/ui/Input';
 import { Textarea } from '../../components/ui/Textarea';
 import { Button } from '../../components/ui/Button';
 import { Avatar } from '../../components/ui/Avatar';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
+import { useTheme } from '../../context/ThemeContext';
 import { api } from '../../services/api';
 
 export interface SettingsProfilePageProps {
@@ -23,6 +24,7 @@ const MAX_BIO_LENGTH = 160;
 export const SettingsProfilePage: React.FC<SettingsProfilePageProps> = ({ onNavigate }) => {
   const { user, updateCurrentUser, signOut } = useAuth();
   const { showToast } = useToast();
+  const { theme, toggleTheme } = useTheme();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [name, setName] = useState('');
@@ -270,6 +272,43 @@ export const SettingsProfilePage: React.FC<SettingsProfilePageProps> = ({ onNavi
           </Button>
         </div>
       </form>
+
+      {/* Appearance Section */}
+      <div className="bg-white dark:bg-[#1a1d23] border border-slate-200/80 dark:border-[#2d333b] rounded-2xl p-6 shadow-xs transition-colors">
+        <h2 className="text-sm font-bold text-slate-900 dark:text-[#f3f4f6] mb-4">Appearance</h2>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-[#22272e] flex items-center justify-center">
+              {theme === 'dark' ? (
+                <Moon className="w-4 h-4 text-slate-600 dark:text-zinc-300" />
+              ) : (
+                <Sun className="w-4 h-4 text-amber-500" />
+              )}
+            </div>
+            <div>
+              <p className="text-sm font-medium text-slate-900 dark:text-[#f3f4f6]">
+                {theme === 'dark' ? 'Dark mode' : 'Light mode'}
+              </p>
+              <p className="text-[11px] text-slate-500 dark:text-zinc-500">
+                Switch between light and dark themes
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={toggleTheme}
+            className={`relative w-11 h-6 rounded-full transition-colors cursor-pointer ${
+              theme === 'dark' ? 'bg-[#FF3366]' : 'bg-slate-300'
+            }`}
+          >
+            <span
+              className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow-sm transition-transform ${
+                theme === 'dark' ? 'translate-x-5.5' : 'translate-x-0.5'
+              }`}
+            />
+          </button>
+        </div>
+      </div>
     </div>
   );
 };
