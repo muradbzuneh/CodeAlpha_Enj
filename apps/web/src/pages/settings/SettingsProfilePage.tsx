@@ -1,20 +1,16 @@
 /**
- * Settings & Profile Page for ENJ.
+ * Profile Settings Page for ENJ.
  * Route: /settings/profile
- * Features:
- * - Theme Configuration (Default White / Light vs Dark Mode)
- * - Profile Information (Name, Username, Bio)
- * - Validation & Persistence
+ * Features: Upload photo, display name, username, bio, sign out, save changes
  */
 
-import React, { useState, useEffect } from 'react';
-import { User, AtSign, ArrowLeft, Save, AlertCircle, Sun, Moon, Check, Palette } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Camera, Trash2, AlertCircle, Eye, EyeOff } from 'lucide-react';
 import { Input } from '../../components/ui/Input';
 import { Textarea } from '../../components/ui/Textarea';
 import { Button } from '../../components/ui/Button';
 import { Avatar } from '../../components/ui/Avatar';
 import { useAuth } from '../../context/AuthContext';
-import { useTheme } from '../../context/ThemeContext';
 import { useToast } from '../../context/ToastContext';
 import { api } from '../../services/api';
 
@@ -25,13 +21,14 @@ export interface SettingsProfilePageProps {
 const MAX_BIO_LENGTH = 160;
 
 export const SettingsProfilePage: React.FC<SettingsProfilePageProps> = ({ onNavigate }) => {
-  const { user, updateCurrentUser } = useAuth();
-  const { theme, setTheme } = useTheme();
+  const { user, updateCurrentUser, signOut } = useAuth();
   const { showToast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [name, setName] = useState('');
   const [username, setUsername] = useState('');
   const [bio, setBio] = useState('');
+  const [imageUrl, setImageUrl] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -40,6 +37,7 @@ export const SettingsProfilePage: React.FC<SettingsProfilePageProps> = ({ onNavi
       setName(user.name || '');
       setUsername(user.username || '');
       setBio(user.bio || '');
+      setImageUrl(user.image || '');
     }
   }, [user]);
 
@@ -83,15 +81,16 @@ export const SettingsProfilePage: React.FC<SettingsProfilePageProps> = ({ onNavi
         username: cleanUsername,
         name: name.trim(),
         bio: bio.trim(),
+        image: imageUrl.trim() || undefined,
       });
 
       updateCurrentUser({
         username: updatedProfile.username,
         name: updatedProfile.name,
         bio: updatedProfile.bio,
+        image: updatedProfile.image,
       });
       showToast('Profile updated successfully', 'success');
-      onNavigate(user.username ? `/profile/${user.username}` : '/');
     } catch (err: any) {
       setError(err?.message || 'Failed to update profile.');
     } finally {
@@ -99,191 +98,178 @@ export const SettingsProfilePage: React.FC<SettingsProfilePageProps> = ({ onNavi
     }
   };
 
+  const handleSignOut = async () => {
+    await signOut();
+    onNavigate('/');
+  };
+
   return (
-    <div className="space-y-6">
+    <div className="max-w-lg mx-auto space-y-6">
       {/* Header */}
-      <div className="flex items-center gap-3 px-1">
-        <button
-          type="button"
-          onClick={() => onNavigate(user.username ? `/profile/${user.username}` : '/settings/profile')}
-          className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-[#22272e] text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-[#f3f4f6] transition-colors cursor-pointer"
-          aria-label="Back to profile"
-        >
-          <ArrowLeft className="w-4 h-4" />
-        </button>
-        <div>
-          <h1 className="text-xl font-black tracking-tight text-slate-900 dark:text-[#f3f4f6]">
-            Settings
-          </h1>
-          <p className="text-xs text-slate-500 dark:text-zinc-500">
-            Appearance theme, public handle, and profile information
-          </p>
-        </div>
-      </div>
-
-      {/* Appearance Theme Switcher (Requested Feature) */}
-      <div className="bg-white dark:bg-[#1a1d23] border border-slate-200/80 dark:border-[#2d333b] rounded-2xl p-5 sm:p-6 shadow-xs transition-colors">
-        <div className="flex items-center gap-2 mb-1.5">
-          <Palette className="w-4 h-4 text-[#FF3366]" />
-          <h2 className="text-sm font-bold text-slate-900 dark:text-[#f3f4f6]">
-            Appearance & Theme
-          </h2>
-        </div>
-        <p className="text-xs text-slate-500 dark:text-zinc-400 mb-4">
-          Choose your interface theme. Default is White (Light mode), or switch to Dark mode.
+      <div>
+        <h1 className="text-xl font-bold text-slate-900 dark:text-[#f3f4f6]">
+          Profile settings
+        </h1>
+        <p className="text-sm text-slate-500 dark:text-zinc-400">
+          How you appear across Enj
         </p>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-          {/* Light Theme Card (Default) */}
-          <button
-            type="button"
-            onClick={() => {
-              setTheme('light');
-              showToast('Switched to White (Light) mode', 'info');
-            }}
-            className={`p-4 rounded-2xl border text-left flex items-start justify-between transition-all cursor-pointer ${
-              theme === 'light'
-                ? 'border-[#FF3366] bg-rose-50/50 dark:bg-rose-950/20 ring-2 ring-[#FF3366]/30 shadow-xs'
-                : 'border-slate-200 dark:border-[#2d333b] bg-slate-50 dark:bg-[#16181d] hover:border-slate-300'
-            }`}
-          >
-            <div className="flex items-start gap-3">
-              <div className="w-9 h-9 rounded-xl bg-white border border-slate-200 text-amber-500 flex items-center justify-center shadow-xs">
-                <Sun className="w-5 h-5" />
-              </div>
-              <div>
-                <div className="flex items-center gap-1.5">
-                  <span className="text-xs font-bold text-slate-900 dark:text-white">
-                    White / Light
-                  </span>
-                  <span className="text-[10px] bg-slate-200 dark:bg-zinc-700 text-slate-700 dark:text-zinc-300 px-1.5 py-0.2 rounded font-semibold">
-                    Default
-                  </span>
-                </div>
-                <p className="text-[11px] text-slate-500 dark:text-zinc-400 mt-0.5">
-                  Clean, crisp, high-contrast white canvas
-                </p>
-              </div>
-            </div>
-
-            {theme === 'light' && (
-              <div className="w-5 h-5 rounded-full bg-[#FF3366] text-white flex items-center justify-center shadow-xs shrink-0">
-                <Check className="w-3 h-3 stroke-[3]" />
-              </div>
-            )}
-          </button>
-
-          {/* Dark Theme Card */}
-          <button
-            type="button"
-            onClick={() => {
-              setTheme('dark');
-              showToast('Switched to Dark mode', 'info');
-            }}
-            className={`p-4 rounded-2xl border text-left flex items-start justify-between transition-all cursor-pointer ${
-              theme === 'dark'
-                ? 'border-[#FF3366] bg-rose-50/50 dark:bg-rose-950/20 ring-2 ring-[#FF3366]/30 shadow-xs'
-                : 'border-slate-200 dark:border-[#2d333b] bg-slate-50 dark:bg-[#16181d] hover:border-slate-300'
-            }`}
-          >
-            <div className="flex items-start gap-3">
-              <div className="w-9 h-9 rounded-xl bg-[#0f1115] border border-zinc-700 text-indigo-400 flex items-center justify-center shadow-xs">
-                <Moon className="w-5 h-5" />
-              </div>
-              <div>
-                <span className="text-xs font-bold text-slate-900 dark:text-white block">
-                  Dark Mode
-                </span>
-                <p className="text-[11px] text-slate-500 dark:text-zinc-400 mt-0.5">
-                  Eye-friendly obsidian palette with radiant accents
-                </p>
-              </div>
-            </div>
-
-            {theme === 'dark' && (
-              <div className="w-5 h-5 rounded-full bg-[#FF3366] text-white flex items-center justify-center shadow-xs shrink-0">
-                <Check className="w-3 h-3 stroke-[3]" />
-              </div>
-            )}
-          </button>
-        </div>
       </div>
 
-      {/* Profile Settings Card */}
-      <div className="bg-white dark:bg-[#1a1d23] border border-slate-200/80 dark:border-[#2d333b] rounded-2xl p-5 sm:p-6 shadow-xs transition-colors">
-        {/* Profile Avatar Notice */}
-        <div className="flex items-start gap-4 pb-6 border-b border-slate-100 dark:border-[#262a32]">
-          <Avatar src={user.image} name={user.name || user.username} size="lg" />
-          <div>
-            <h3 className="text-sm font-bold text-slate-900 dark:text-[#f3f4f6]">
-              Profile Photo & Identity
-            </h3>
-            <p className="text-xs text-slate-500 dark:text-zinc-400 mt-0.5">
-              Avatar is linked to your ENJ member identity. Custom avatar upload will be enabled soon.
-            </p>
+      {/* Avatar / Photo Section */}
+      <div className="bg-white dark:bg-[#1a1d23] border border-slate-200/80 dark:border-[#2d333b] rounded-2xl p-6 shadow-xs transition-colors">
+        <div className="flex items-start gap-6">
+          <div className="relative group">
+            <Avatar
+              src={imageUrl || user.image}
+              name={user.name || user.username}
+              size="lg"
+              className="w-20 h-20 text-2xl"
+            />
+            <div className="absolute inset-0 rounded-full bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity cursor-pointer"
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <Camera className="w-5 h-5 text-white" />
+            </div>
+          </div>
+
+          <div className="flex-1 space-y-2">
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                Upload photo
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => setImageUrl('')}
+                className="text-slate-500 hover:text-rose-500"
+              >
+                Remove
+              </Button>
+            </div>
+
+            <div>
+              <p className="text-xs text-slate-500 dark:text-zinc-400 mb-1">
+                ...or paste an image URL
+              </p>
+              <Input
+                type="url"
+                placeholder="https://example.com/photo.jpg"
+                value={imageUrl}
+                onChange={(e) => setImageUrl(e.target.value)}
+                className="text-xs"
+              />
+              <p className="text-[11px] text-slate-400 dark:text-zinc-500 mt-1">
+                PNG, JPG, WebP or GIF up to 4 MB.
+              </p>
+            </div>
           </div>
         </div>
 
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file) {
+              if (file.size > 4 * 1024 * 1024) {
+                showToast('Image must be under 4 MB', 'error');
+                return;
+              }
+              const reader = new FileReader();
+              reader.onload = (ev) => setImageUrl(ev.target?.result as string);
+              reader.readAsDataURL(file);
+            }
+          }}
+        />
+      </div>
+
+      {/* Form Fields */}
+      <form onSubmit={handleSubmit} className="space-y-5">
         {error && (
-          <div className="mt-5 p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800/40 flex items-center gap-2.5 text-xs text-rose-600 dark:text-rose-300 font-medium">
+          <div className="flex items-center gap-2 p-3 rounded-xl bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/40 text-rose-600 dark:text-rose-400">
             <AlertCircle className="w-4 h-4 shrink-0" />
-            <span>{error}</span>
+            <p className="text-xs">{error}</p>
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="mt-6 space-y-5">
+        <div>
+          <label className="block text-sm font-medium text-slate-700 dark:text-zinc-300 mb-1.5">
+            Display name
+          </label>
           <Input
-            label="Display Name"
+            type="text"
+            placeholder="Your name"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="Your Name"
-            icon={<User className="w-4 h-4" />}
-            required
+            maxLength={50}
           />
+        </div>
 
-          <Input
-            label="Username"
-            value={username}
-            onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/\s+/g, ''))}
-            placeholder="handle"
-            icon={<AtSign className="w-4 h-4" />}
-            helperText="Your unique handle on ENJ (e.g. @alexrivers)"
-            required
-          />
+        <div>
+          <label className="block text-sm font-medium text-slate-700 dark:text-zinc-300 mb-1.5">
+            Username
+          </label>
+          <div className="relative">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-zinc-500 text-sm">
+              @
+            </span>
+            <Input
+              type="text"
+              placeholder="username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
+              maxLength={30}
+              className="pl-8"
+            />
+          </div>
+        </div>
 
+        <div>
+          <label className="block text-sm font-medium text-slate-700 dark:text-zinc-300 mb-1.5">
+            Bio
+          </label>
           <Textarea
-            label="Bio"
+            placeholder="Tell us about yourself..."
             value={bio}
             onChange={(e) => setBio(e.target.value)}
-            placeholder="Tell the community a little about what you build, think, or care about..."
             maxLength={MAX_BIO_LENGTH}
-            currentLength={bio.length}
             rows={3}
+            className="resize-none"
           />
+          <p className="text-[11px] text-slate-400 dark:text-zinc-500 mt-1 text-right">
+            {MAX_BIO_LENGTH - bio.length} characters left
+          </p>
+        </div>
 
-          <div className="pt-2 flex justify-end gap-3">
-            <Button
-              type="button"
-              variant="outline"
-              size="md"
-              onClick={() => onNavigate(user.username ? `/profile/${user.username}` : '/settings/profile')}
-              disabled={isSaving}
-            >
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              variant="primary"
-              size="md"
-              isLoading={isSaving}
-              disabled={isSaving}
-            >
-              <Save className="w-4 h-4 mr-1.5" />
-              <span>Save Changes</span>
-            </Button>
-          </div>
-        </form>
-      </div>
+        {/* Actions */}
+        <div className="flex items-center justify-between pt-2">
+          <button
+            type="button"
+            onClick={handleSignOut}
+            className="text-sm font-medium text-rose-500 hover:text-rose-600 dark:text-rose-400 dark:hover:text-rose-300 transition-colors cursor-pointer"
+          >
+            Sign out
+          </button>
+
+          <Button
+            type="submit"
+            variant="primary"
+            size="md"
+            isLoading={isSaving}
+            className="px-6"
+          >
+            Save changes
+          </Button>
+        </div>
+      </form>
     </div>
   );
 };

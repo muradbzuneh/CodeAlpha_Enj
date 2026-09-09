@@ -1,11 +1,10 @@
 /**
  * Left Sidebar Navigation Component for ENJ.
- * Provides desktop navigation links: Home, Explore, Liked, Profile, Settings.
- * Styled with light default and dark mode support and brand gradient accents.
+ * Icons: Home, Explore, Likes, Search, Settings, Profile
  */
 
 import React, { useState } from 'react';
-import { Home, Compass, User, Settings, LogOut, LogIn, Film, Plus } from 'lucide-react';
+import { Home, Compass, Heart, Search, Settings, User, LogOut, LogIn, Plus } from 'lucide-react';
 import { Avatar } from '../ui/Avatar';
 import { ConfirmDialog } from '../ui/ConfirmDialog';
 import { useAuth } from '../../context/AuthContext';
@@ -26,16 +25,16 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
 
   const navItems = [
     { label: 'Home', path: '/', icon: Home, requiresAuth: false },
-    { label: 'Reels', path: '/reels', icon: Film, requiresAuth: false },
-    { label: 'Add', path: '#post', icon: Plus, isAction: true, requiresAuth: false },
     { label: 'Explore', path: '/explore', icon: Compass, requiresAuth: false },
+    { label: 'Likes', path: '/liked', icon: Heart, requiresAuth: true },
+    { label: 'Search', path: '/search', icon: Search, requiresAuth: false },
+    { label: 'Settings', path: '/settings/profile', icon: Settings, requiresAuth: true },
     {
       label: 'Profile',
       path: user ? (user.username ? `/profile/${user.username}` : '/settings/profile') : '/login',
       icon: User,
       requiresAuth: true,
     },
-    { label: 'Settings', path: '/settings/profile', icon: Settings, requiresAuth: true },
   ];
 
   return (
@@ -47,25 +46,16 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive =
-              !item.isAction &&
-              (item.path === '/'
+              item.path === '/'
                 ? currentPath === '/'
-                : currentPath.startsWith(item.path));
+                : currentPath.startsWith(item.path);
 
             if (item.requiresAuth && !user) {
               return null;
             }
 
             const handleClick = () => {
-              if (item.isAction) {
-                if (user && onOpenCompose) {
-                  onOpenCompose();
-                } else if (!user) {
-                  onNavigate('/login');
-                }
-              } else {
-                onNavigate(item.path);
-              }
+              onNavigate(item.path);
             };
 
             return (
@@ -83,7 +73,7 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
                   className={`w-4 h-4 shrink-0 transition-colors ${
                     isActive
                       ? 'text-[#FF3366]'
-                      : 'text-slate-400 dark:text-zinc-500 group-hover:text-slate-700 dark:group-hover:text-zinc-300'
+                      : 'text-slate-400 dark:text-zinc-500'
                   }`}
                 />
                 <span>{item.label}</span>
