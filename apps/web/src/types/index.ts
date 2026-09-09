@@ -111,6 +111,7 @@ export interface Story {
   createdAt: string;
   expiresAt: string;
   isViewed?: boolean;
+  viewCount?: number;
 }
 
 export interface CreateStoryInput {

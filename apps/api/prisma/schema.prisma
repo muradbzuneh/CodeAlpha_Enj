@@ -29,6 +29,10 @@ model User {
   followers Follow[] @relation("UserFollowers")
   following Follow[] @relation("UserFollowing")
 
+  notifications Notification[] @relation("NotificationActor")
+  receivedNotifications Notification[] @relation("NotificationTarget")
+  storyReactions StoryReaction[]
+
   @@unique([email])
   @@map("user")
 }
@@ -95,6 +99,7 @@ model Post {
 
   comments Comment[]
   likes    Like[]
+  notifications Notification[]
 
   @@index([authorId])
   @@index([createdAt])
@@ -165,6 +170,7 @@ model Story {
   moodEmoji  String?
 
   views StoryView[]
+  reactions StoryReaction[]
 
   @@index([authorId])
   @@index([createdAt])
@@ -186,4 +192,40 @@ model StoryView {
   @@index([storyId])
   @@index([userId])
   @@map("story_view")
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  type      String
+  message   String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  actorId String
+  actor   User   @relation("NotificationActor", fields: [actorId], references: [id], onDelete: Cascade)
+
+  userId String
+  user   User   @relation("NotificationTarget", fields: [userId], references: [id], onDelete: Cascade)
+
+  postId String?
+  post   Post?  @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@index([userId, read])
+  @@index([userId, createdAt])
+  @@map("notification")
+}
+
+model StoryReaction {
+  id        String   @id @default(cuid())
+  content   String
+  createdAt DateTime @default(now())
+
+  storyId String
+  story   Story  @relation(fields: [storyId], references: [id], onDelete: Cascade)
+
+  authorId String
+  author   User   @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([storyId, createdAt])
+  @@map("story_reaction")
 }

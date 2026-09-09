@@ -6,6 +6,7 @@ import { usersService } from "./users.service";
 import { likesService } from "./likes.service";
 import { searchService } from "./search.service";
 import { storiesService } from "./stories.service";
+import { notificationsService } from "./notifications.service";
 
 export const api = {
   auth: authService,
@@ -16,6 +17,7 @@ export const api = {
   likes: likesService,
   search: searchService,
   stories: storiesService,
+  notifications: notificationsService,
 
   getMode(): "live" {
     return "live";

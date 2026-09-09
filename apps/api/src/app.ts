@@ -9,6 +9,8 @@ import { profileRouter } from "./routes/profile.routes.js";
 import { feedRouter } from "./routes/feed.routes.js";
 import { followRouter } from "./routes/follow.routes.js";
 import { storyRouter } from "./routes/story.routes.js";
+import { notificationRouter } from "./routes/notification.routes.js";
+import { storyReactionRouter } from "./routes/story-reaction.routes.js";
 export const app = express();
 
 app.use(
@@ -63,6 +65,8 @@ app.get("/api/health", (_req, res) => {
 
 app.use("/api/posts", postRouter);
 app.use("/api", storyRouter);
+app.use("/api", notificationRouter);
+app.use("/api", storyReactionRouter);
 
 app.get("/api/health/db", async (_req, res) => {
   try {

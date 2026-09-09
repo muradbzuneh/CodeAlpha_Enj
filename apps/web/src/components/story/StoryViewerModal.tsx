@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { X, ChevronLeft, ChevronRight, Heart, Send, Trash2 } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, Heart, Send, Trash2, Eye } from 'lucide-react';
 import { Avatar } from '../ui/Avatar';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
@@ -33,6 +33,7 @@ export const StoryViewerModal: React.FC<StoryViewerModalProps> = ({
   const [isPaused, setIsPaused] = useState(false);
   const [replyText, setReplyText] = useState('');
   const [floatingEmojis, setFloatingEmojis] = useState<{ id: number; emoji: string; x: number }[]>([]);
+  const [reactionCount, setReactionCount] = useState(0);
 
   const touchStartX = useRef(0);
   const touchStartY = useRef(0);
@@ -64,6 +65,7 @@ export const StoryViewerModal: React.FC<StoryViewerModalProps> = ({
   useEffect(() => {
     if (isOpen && currentStory) {
       api.stories.markViewed(currentStory.id).catch(() => {});
+      api.stories.getReactions(currentStory.id).then((r) => setReactionCount(r.length)).catch(() => {});
     }
   }, [isOpen, currentStory?.id]);
 
@@ -114,20 +116,29 @@ export const StoryViewerModal: React.FC<StoryViewerModalProps> = ({
     setIsPaused(false);
   };
 
-  const handleReact = (emoji: string) => {
+  const handleReact = async (emoji: string) => {
     const id = Date.now();
     const x = Math.random() * 60 + 20;
     setFloatingEmojis((prev) => [...prev, { id, emoji, x }]);
-    showToast(`Reacted ${emoji}`, 'info');
+    setReactionCount((prev) => prev + 1);
+    try {
+      await api.stories.addReaction(currentStory.id, emoji);
+    } catch {}
     setTimeout(() => {
       setFloatingEmojis((prev) => prev.filter((item) => item.id !== id));
     }, 1500);
   };
 
-  const handleSendReply = (e: React.FormEvent) => {
+  const handleSendReply = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!replyText.trim()) return;
-    showToast(`Reply sent to @${currentStory.author.username}`, 'success');
+    try {
+      await api.stories.addReaction(currentStory.id, replyText.trim());
+      setReactionCount((prev) => prev + 1);
+      showToast('Reply sent', 'success');
+    } catch {
+      showToast('Failed to send reply', 'error');
+    }
     setReplyText('');
   };
 
@@ -223,9 +234,17 @@ export const StoryViewerModal: React.FC<StoryViewerModalProps> = ({
               <span className="text-[13px] font-bold truncate leading-tight block">
                 {currentStory.author.name}
               </span>
-              <span className="text-[10px] text-white/60 leading-tight">
-                {timeDiffHours}h ago
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] text-white/60 leading-tight">
+                  {timeDiffHours}h ago
+                </span>
+                {isOwnStory && (currentStory.viewCount ?? 0) > 0 && (
+                  <span className="text-[10px] text-white/60 leading-tight flex items-center gap-0.5">
+                    <Eye className="w-3 h-3" />
+                    {currentStory.viewCount}
+                  </span>
+                )}
+              </div>
             </div>
           </div>
 
@@ -297,6 +316,12 @@ export const StoryViewerModal: React.FC<StoryViewerModalProps> = ({
               </button>
             ))}
           </div>
+
+          {reactionCount > 0 && (
+            <p className="text-center text-[11px] text-white/60">
+              {reactionCount} {reactionCount === 1 ? 'reaction' : 'reactions'}
+            </p>
+          )}
 
           {/* Text Reply Input */}
           <form onSubmit={handleSendReply} className="flex items-center gap-2">

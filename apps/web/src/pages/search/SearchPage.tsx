@@ -11,7 +11,7 @@ import { PostCard } from '../../components/post/PostCard';
 import { Avatar } from '../../components/ui/Avatar';
 import { FollowButton } from '../../components/profile/FollowButton';
 import { api } from '../../services/api';
-import type { Post, User as UserType } from '../../types';
+import type { Post, User as UserType, FollowUserItem } from '../../types';
 
 export interface SearchPageProps {
   initialQuery?: string;
@@ -31,7 +31,7 @@ export const SearchPage: React.FC<SearchPageProps> = ({
   const [query, setQuery] = useState(initialQuery);
   const [activeTab, setActiveTab] = useState<'all' | 'posts' | 'people'>('all');
   const [posts, setPosts] = useState<Post[]>([]);
-  const [users, setUsers] = useState<UserType[]>([]);
+  const [users, setUsers] = useState<(UserType & { followerCount?: number; isFollowing?: boolean })[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
@@ -52,7 +52,7 @@ export const SearchPage: React.FC<SearchPageProps> = ({
         const result = await api.search.query(query);
         if (!isCancelled) {
           setPosts(result.posts);
-          setUsers(result.users);
+          setUsers(result.users.map((u) => ({ ...u, isFollowing: false })));
         }
       } catch (err) {
         console.warn('Search query error:', err);
@@ -186,7 +186,7 @@ export const SearchPage: React.FC<SearchPageProps> = ({
                   {users.map((user) => (
                     <div
                       key={user.id}
-                      onClick={() => onProfileClick(user.username)}
+                      onClick={() => onProfileClick(user.id)}
                       className="p-4 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-[#22272e] transition-colors cursor-pointer"
                     >
                       <div className="flex items-center gap-3 min-w-0">
@@ -205,7 +205,7 @@ export const SearchPage: React.FC<SearchPageProps> = ({
                       </div>
 
                       <div onClick={(e) => e.stopPropagation()}>
-                        <FollowButton userId={user.id} size="sm" />
+                        <FollowButton userId={user.id} initialIsFollowing={user.isFollowing} size="sm" />
                       </div>
                     </div>
                   ))}

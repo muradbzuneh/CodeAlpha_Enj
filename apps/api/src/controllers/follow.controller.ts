@@ -55,6 +55,18 @@ export async function followUser(req: Request, res: Response) {
       },
     });
 
+    if (currentUser.id !== userId) {
+      const actorName = currentUser.name || currentUser.username || "Someone";
+      await prisma.notification.create({
+        data: {
+          type: "follow",
+          message: `${actorName} started following you`,
+          actorId: currentUser.id,
+          userId,
+        },
+      }).catch(() => {});
+    }
+
     return res.status(201).json({
       status: "success",
       data: follow,

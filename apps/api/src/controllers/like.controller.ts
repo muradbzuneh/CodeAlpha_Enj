@@ -19,6 +19,7 @@ export async function likePost(req: Request, res: Response) {
       },
       select: {
         id: true,
+        authorId: true,
       },
     });
 
@@ -51,6 +52,19 @@ export async function likePost(req: Request, res: Response) {
         postId,
       },
     });
+
+    if (user.id !== post.authorId) {
+      const actorName = user.name || user.username || "Someone";
+      await prisma.notification.create({
+        data: {
+          type: "like",
+          message: `${actorName} liked your post`,
+          actorId: user.id,
+          userId: post.authorId,
+          postId,
+        },
+      }).catch(() => {});
+    }
 
     return res.status(201).json({
       status: "success",

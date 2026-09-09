@@ -13,6 +13,7 @@ import { Logo } from '../ui/Logo';
 import { Avatar } from '../ui/Avatar';
 import { Button } from '../ui/Button';
 import { ConfirmDialog } from '../ui/ConfirmDialog';
+import { NotificationBell } from '../notifications/NotificationBell';
 import { useAuth } from '../../context/AuthContext';
 
 export interface HeaderProps {
@@ -97,12 +98,14 @@ export const Header: React.FC<HeaderProps> = ({
               <button
                 type="button"
                 onClick={handleLogout}
-                className="sm.hidden p-2 rounded-xl bg-[#FF3366] hover:bg-[#EE2055] text-white shadow-2xs active.scale-95 transition-transform cursor-pointer"
+                className="sm:hidden p-2 rounded-xl bg-[#FF3366] hover:bg-[#EE2055] text-white shadow-2xs active.scale-95 transition-transform cursor-pointer"
                 title="Sign out"
                 aria-label="Sign out"
               >
                 <LogOut className="w-4 h-4" />
               </button>
+
+              <NotificationBell onNavigate={onNavigate} />
 
               <button
                 type="button"
