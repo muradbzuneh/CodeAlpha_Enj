@@ -29,7 +29,7 @@ export const MobileNav: React.FC<MobileNavProps> = ({ currentPath, onNavigate, o
     { label: 'Likes', path: '/liked', icon: Heart, requiresAuth: true },
     {
       label: 'Profile',
-      path: user ? (user.username ? `/profile/${user.username}` : '/settings/profile') : '/login',
+      path: user ? `/profile/${user.id}` : '/login',
       icon: User,
       requiresAuth: true,
     },

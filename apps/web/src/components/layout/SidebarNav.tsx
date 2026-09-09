@@ -28,10 +28,10 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
     { label: 'Explore', path: '/explore', icon: Compass, requiresAuth: false },
     { label: 'Likes', path: '/liked', icon: Heart, requiresAuth: true },
     { label: 'Search', path: '/search', icon: Search, requiresAuth: false },
-    { label: 'Settings', path: '/settings/profile', icon: Settings, requiresAuth: true },
+    { label: 'Settings', path: '/settings/profile', icon: Settings, requiresAuth: true, exact: true },
     {
       label: 'Profile',
-      path: user ? (user.username ? `/profile/${user.username}` : '/settings/profile') : '/login',
+      path: user ? `/profile/${user.id}` : '/login',
       icon: User,
       requiresAuth: true,
     },
@@ -45,9 +45,11 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
         <nav className="space-y-1">
           {navItems.map((item) => {
             const Icon = item.icon;
-            const isActive =
-              item.path === '/'
-                ? currentPath === '/'
+          const isActive =
+            item.path === '/'
+              ? currentPath === '/'
+              : (item as any).exact
+                ? currentPath === item.path
                 : currentPath.startsWith(item.path);
 
             if (item.requiresAuth && !user) {
@@ -88,7 +90,7 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
         {user ? (
           <div className="flex items-center justify-between p-2 rounded-xl bg-white dark:bg-[#1a1d23] border border-slate-200/80 dark:border-[#2d333b] shadow-2xs">
             <div
-              onClick={() => onNavigate(user.username ? `/profile/${user.username}` : '/settings/profile')}
+              onClick={() => onNavigate(`/profile/${user.id}`)}
               className="flex items-center gap-2.5 cursor-pointer min-w-0 flex-1"
             >
               <Avatar src={user.image} name={user.name || user.username} size="sm" />
