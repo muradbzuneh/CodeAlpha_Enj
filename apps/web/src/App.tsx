@@ -63,11 +63,11 @@ function RouterApp() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
 
-  const handleProfileClick = useCallback((username: string | null | undefined) => {
-    if (username) {
-      navigate(`/profile/${username}`);
+  const handleProfileClick = useCallback((identifier: string | null | undefined) => {
+    if (identifier) {
+      navigate(`/profile/${identifier}`);
     } else {
-      navigate('/settings/profile');
+      navigate('/explore');
     }
   }, [navigate]);
 

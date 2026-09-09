@@ -116,7 +116,7 @@ export const PostCard: React.FC<PostCardProps> = ({
 
   const handleAuthorClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    onProfileClick?.(post.author.username);
+    onProfileClick?.(post.author.username || post.author.id);
   };
 
   const dropdownItems = [

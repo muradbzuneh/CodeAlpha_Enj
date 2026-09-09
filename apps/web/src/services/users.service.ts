@@ -116,4 +116,16 @@ export const usersService = {
     const res = await apiClient.patch<{ data: BackendProfile }>("/api/profile", input);
     return normalizeProfile(res.data);
   },
+
+  async getSuggestions(): Promise<FollowUserItem[]> {
+    const res = await apiClient.get<{ data: BackendProfile[] }>("/api/suggestions");
+    return (res.data || []).map((u) => ({
+      id: u.id,
+      username: u.username,
+      name: u.name,
+      image: u.image ?? null,
+      bio: u.bio ?? null,
+      isFollowing: false,
+    }));
+  },
 };

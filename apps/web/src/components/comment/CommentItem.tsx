@@ -50,7 +50,7 @@ export const CommentItem: React.FC<CommentItemProps> = ({
       }`}
     >
       <div
-        onClick={() => onProfileClick?.(comment.author.username)}
+        onClick={() => onProfileClick?.(comment.author.username || comment.author.id)}
         className="cursor-pointer"
       >
         <Avatar src={comment.author.image} name={comment.author.name || comment.author.username || '?'} size="sm" />
@@ -59,7 +59,7 @@ export const CommentItem: React.FC<CommentItemProps> = ({
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between gap-2">
           <div
-            onClick={() => onProfileClick?.(comment.author.username)}
+            onClick={() => onProfileClick?.(comment.author.username || comment.author.id)}
             className="flex items-center gap-1.5 cursor-pointer group"
           >
             <span className="text-xs font-bold text-slate-900 dark:text-[#f3f4f6] group-hover:text-[#FF3366] dark:group-hover:text-[#FF5E7E] transition-colors">

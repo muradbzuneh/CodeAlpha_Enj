@@ -30,18 +30,17 @@ export async function getPersonalizedFeed(
       },
     });
 
-    const authorIds = [
-      currentUser.id,
-      ...following.map((follow) => follow.followingId),
-    ];
+    // If user follows nobody, show ALL posts (global discover feed)
+    const hasFollowing = following.length > 0;
+    const authorIds = hasFollowing
+      ? [currentUser.id, ...following.map((follow) => follow.followingId)]
+      : undefined;
 
     const [posts, total] = await Promise.all([
       prisma.post.findMany({
-        where: {
-          authorId: {
-            in: authorIds,
-          },
-        },
+        where: authorIds
+          ? { authorId: { in: authorIds } }
+          : {},
         orderBy: {
           createdAt: "desc",
         },
@@ -70,11 +69,9 @@ export async function getPersonalizedFeed(
       }),
 
       prisma.post.count({
-        where: {
-          authorId: {
-            in: authorIds,
-          },
-        },
+        where: authorIds
+          ? { authorId: { in: authorIds } }
+          : {},
       }),
     ]);
 

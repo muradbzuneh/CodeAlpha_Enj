@@ -4,6 +4,7 @@ import {
   getFollowers,
   getFollowing,
   getProfile,
+  getSuggestions,
   updateProfile,
 } from "../controllers/profile.controller.js";
 import { optionalAuth } from "../middleware/optional-auth.js";
@@ -17,5 +18,6 @@ profileRouter.get("/user/:userId", optionalAuth, getProfile);
 profileRouter.get("/user/:userId/followers", optionalAuth, getFollowers);
 profileRouter.get("/user/:userId/following", optionalAuth, getFollowing);
 
+profileRouter.get("/suggestions", optionalAuth, getSuggestions);
 profileRouter.get("/username/check", checkUsername);
 profileRouter.patch("/profile", requireAuth, validateBody(updateProfileSchema), updateProfile);
