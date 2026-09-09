@@ -4,6 +4,7 @@ import type { Post } from "@/types";
 interface BackendPost {
   id: string;
   content: string;
+  mediaUrl?: string | null;
   authorId: string;
   createdAt: string;
   updatedAt?: string;
@@ -16,6 +17,7 @@ function normalizePost(data: BackendPost): Post {
   return {
     id: data.id,
     content: data.content,
+    mediaUrl: data.mediaUrl ?? null,
     authorId: data.authorId,
     createdAt: data.createdAt,
     updatedAt: data.updatedAt,
@@ -23,7 +25,6 @@ function normalizePost(data: BackendPost): Post {
     likesCount: data._count?.likes ?? 0,
     commentsCount: data._count?.comments ?? 0,
     isLiked: data.isLiked ?? false,
-    mediaUrl: null,
   };
 }
 

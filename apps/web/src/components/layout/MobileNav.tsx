@@ -4,7 +4,7 @@
  */
 
 import React from 'react';
-import { Home, Compass, Plus, Heart, User } from 'lucide-react';
+import { Home, Compass, Plus, Film, User } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
 export interface MobileNavProps {
@@ -24,9 +24,9 @@ export const MobileNav: React.FC<MobileNavProps> = ({ currentPath, onNavigate, o
     requiresAuth?: boolean;
   }[] = [
     { label: 'Home', path: '/', icon: Home },
-    { label: 'Explore', path: '/explore', icon: Compass },
+    { label: 'Reels', path: '/reels', icon: Film },
     { label: 'Post', path: '#post', icon: Plus, isAction: true },
-    { label: 'Likes', path: '/liked', icon: Heart, requiresAuth: true },
+    { label: 'Explore', path: '/explore', icon: Compass },
     {
       label: 'Profile',
       path: user ? `/profile/${user.id}` : '/login',

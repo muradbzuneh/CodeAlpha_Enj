@@ -13,6 +13,7 @@ export async function createPost(req: Request, res: Response) {
     const post = await prisma.post.create({
       data: {
         content: req.body.content,
+        mediaUrl: req.body.mediaUrl || null,
         authorId: user.id,
       },
 
@@ -259,6 +260,7 @@ export async function updatePost(req: Request, res: Response) {
 
       data: {
         content: req.body.content,
+        mediaUrl: req.body.mediaUrl !== undefined ? req.body.mediaUrl : undefined,
       },
 
       include: {
