@@ -21,6 +21,7 @@ export async function getProfile(req: Request, res: Response) {
         username: true,
         bio: true,
         image: true,
+        bannerUrl: true,
         createdAt: true,
         _count: {
           select: { posts: true, followers: true, following: true },
@@ -68,13 +69,14 @@ export async function getProfile(req: Request, res: Response) {
 export async function updateProfile(req: Request, res: Response) {
   try {
     const currentUser = res.locals.session.user;
-    const { name, username, bio, image } = req.body;
+    const { name, username, bio, image, bannerUrl } = req.body;
 
     const updateData: Record<string, unknown> = {};
 
     if (name !== undefined) updateData.name = name;
     if (bio !== undefined) updateData.bio = bio || null;
     if (image !== undefined) updateData.image = image;
+    if (bannerUrl !== undefined) updateData.bannerUrl = bannerUrl;
 
     if (username !== undefined) {
       const normalized = username.toLowerCase();

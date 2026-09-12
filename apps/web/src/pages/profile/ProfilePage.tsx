@@ -5,7 +5,7 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { RefreshCw, AlertCircle, ArrowLeft, Heart, MessageSquare, Flame } from 'lucide-react';
+import { RefreshCw, AlertCircle, ArrowLeft, Heart, MessageSquare, Flame, Camera } from 'lucide-react';
 import { FollowListModal } from '../../components/profile/FollowListModal';
 import { FollowButton } from '../../components/profile/FollowButton';
 import { PostCard } from '../../components/post/PostCard';
@@ -14,7 +14,9 @@ import { ProfileSkeleton, PostSkeleton } from '../../components/ui/Skeleton';
 import { Button } from '../../components/ui/Button';
 import { Avatar } from '../../components/ui/Avatar';
 import { useAuth } from '../../context/AuthContext';
+import { useToast } from '../../context/ToastContext';
 import { api } from '../../services/api';
+import { uploadFile } from '../../lib/upload';
 import type { Profile, Post, Story } from '../../types';
 
 export interface ProfilePageProps {
@@ -31,6 +33,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
   onEditClick,
 }) => {
   const { user } = useAuth();
+  const { showToast } = useToast();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [userPosts, setUserPosts] = useState<Post[]>([]);
   const [userStories, setUserStories] = useState<Story[]>([]);
@@ -41,6 +44,8 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
   const [isViewerOpen, setIsViewerOpen] = useState(false);
   const [selectedStoryIndex, setSelectedStoryIndex] = useState(0);
   const [followModalType, setFollowModalType] = useState<'followers' | 'following' | null>(null);
+  const [isUploadingBanner, setIsUploadingBanner] = useState(false);
+  const bannerInputRef = React.useRef<HTMLInputElement>(null);
 
   const cleanUsername = username.replace(/^@/, '');
   const isOwnProfile = user && profile && user.id === profile.id;
@@ -104,6 +109,37 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
     setIsViewerOpen(true);
   };
 
+  const handleMessageClick = async () => {
+    if (!profile) return;
+    try {
+      const conv = await api.messages.createConversation(profile.id);
+      onNavigate(`/messages/${conv.id}`);
+    } catch (err: any) {
+      showToast(err?.message || 'Failed to start conversation', 'error');
+    }
+  };
+
+  const handleBannerChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      showToast('Please select an image file', 'error');
+      return;
+    }
+    setIsUploadingBanner(true);
+    try {
+      const { url } = await uploadFile(file);
+      await api.users.updateProfile({ bannerUrl: url } as any);
+      setProfile((prev) => (prev ? { ...prev, bannerUrl: url } : null));
+      showToast('Banner updated', 'success');
+    } catch (err: any) {
+      showToast(err?.message || 'Failed to upload banner', 'error');
+    } finally {
+      setIsUploadingBanner(false);
+      if (bannerInputRef.current) bannerInputRef.current.value = '';
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="space-y-4">
@@ -132,7 +168,29 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
       {/* Profile Banner + Header */}
       <div className="bg-white dark:bg-[#1a1d23] border border-slate-200/80 dark:border-[#2d333b] rounded-2xl overflow-hidden shadow-xs transition-colors">
         {/* Gradient Banner */}
-        <div className="h-32 sm:h-40 bg-gradient-to-r from-[#FF3366] via-[#FF6B6B] to-[#FFAA00] relative" />
+        <div className="h-32 sm:h-40 bg-gradient-to-r from-[#FF3366] via-[#FF6B6B] to-[#FFAA00] relative">
+          {profile.bannerUrl && (
+            <img src={profile.bannerUrl} alt="" className="absolute inset-0 w-full h-full object-cover" referrerPolicy="no-referrer" />
+          )}
+          {isOwnProfile && (
+            <>
+              <input ref={bannerInputRef} type="file" accept="image/*" onChange={handleBannerChange} className="hidden" />
+              <button
+                type="button"
+                onClick={() => bannerInputRef.current?.click()}
+                disabled={isUploadingBanner}
+                className="absolute top-3 right-3 p-2 rounded-xl bg-black/40 backdrop-blur-sm text-white hover:bg-black/60 transition-colors cursor-pointer z-10"
+                title="Change banner"
+              >
+                {isUploadingBanner ? (
+                  <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin block" />
+                ) : (
+                  <Camera className="w-4 h-4" />
+                )}
+              </button>
+            </>
+          )}
+        </div>
 
         {/* Avatar + Info */}
         <div className="px-6 pb-6 -mt-12 relative z-10">
@@ -154,12 +212,23 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                   Edit profile
                 </Button>
               ) : (
-                <FollowButton
-                  userId={profile.id}
-                  initialIsFollowing={profile.isFollowing}
-                  onFollowChange={handleFollowChange}
-                  size="md"
-                />
+                <>
+                  <FollowButton
+                    userId={profile.id}
+                    initialIsFollowing={profile.isFollowing}
+                    onFollowChange={handleFollowChange}
+                    size="md"
+                  />
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleMessageClick}
+                    className="gap-1.5"
+                  >
+                    <MessageSquare className="w-3.5 h-3.5" />
+                    <span className="hidden sm:inline">Message</span>
+                  </Button>
+                </>
               )}
             </div>
           </div>

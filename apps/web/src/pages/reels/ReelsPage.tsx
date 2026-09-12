@@ -8,6 +8,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Heart, MessageCircle, Share2, RefreshCw, AlertCircle } from 'lucide-react';
 import { Avatar } from '../../components/ui/Avatar';
+import { VideoPlayer } from '../../components/post/VideoPlayer';
 import { ShareDialog } from '../../components/post/ShareDialog';
 import { useAuth } from '../../context/AuthContext';
 import { api } from '../../services/api';
@@ -162,12 +163,16 @@ export const ReelsPage: React.FC<ReelsPageProps> = ({ onProfileClick, onCommentC
       <div className="relative aspect-[9/16] w-full max-h-[75vh] sm:max-h-[80vh] rounded-3xl overflow-hidden bg-black shadow-2xl border border-slate-200/80 dark:border-[#2d333b] select-none">
         {/* Post Image / Content */}
         {currentPost.mediaUrl ? (
-          <img
-            src={currentPost.mediaUrl}
-            alt={currentPost.content}
-            className="w-full h-full object-cover"
-            referrerPolicy="no-referrer"
-          />
+          /\.(mp4|webm|ogg|mov|avi|mkv|quicktime)$/i.test(currentPost.mediaUrl) || currentPost.mediaUrl.includes('video') ? (
+            <VideoPlayer src={currentPost.mediaUrl} className="w-full h-full" autoPlay muted />
+          ) : (
+            <img
+              src={currentPost.mediaUrl}
+              alt={currentPost.content}
+              className="w-full h-full object-cover"
+              referrerPolicy="no-referrer"
+            />
+          )
         ) : (
           <div className="w-full h-full bg-gradient-to-br from-[#FF3366] via-[#FF6B6B] to-[#FFAA00] flex items-center justify-center p-8">
             <p className="text-white text-lg font-bold text-center leading-relaxed">

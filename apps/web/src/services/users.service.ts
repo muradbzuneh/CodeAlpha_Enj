@@ -8,6 +8,7 @@ interface BackendProfile {
   username: string;
   bio?: string | null;
   image?: string | null;
+  bannerUrl?: string | null;
   createdAt?: string;
   _count?: { posts: number; followers: number; following: number };
   isFollowing?: boolean;
@@ -21,6 +22,7 @@ function normalizeProfile(data: BackendProfile, extra?: Partial<Profile>): Profi
     name: data.name,
     bio: data.bio ?? null,
     image: data.image ?? null,
+    bannerUrl: data.bannerUrl ?? null,
     postCount: data._count?.posts ?? 0,
     followerCount: data._count?.followers ?? 0,
     followingCount: data._count?.following ?? 0,

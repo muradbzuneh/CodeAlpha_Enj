@@ -20,6 +20,7 @@ export interface Profile {
   name: string;
   bio?: string | null;
   image?: string | null;
+  bannerUrl?: string | null;
   postCount: number;
   followerCount: number;
   followingCount: number;

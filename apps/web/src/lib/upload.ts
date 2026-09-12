@@ -1,6 +1,10 @@
 import { API_BASE_URL } from "./api/client";
 
 export async function uploadFile(file: File): Promise<{ url: string; type: string }> {
+  if (file.size > 20 * 1024 * 1024) {
+    throw new Error("File too large. Maximum size is 20MB.");
+  }
+
   const formData = new FormData();
   formData.append("file", file);
 
@@ -10,11 +14,11 @@ export async function uploadFile(file: File): Promise<{ url: string; type: strin
     body: formData,
   });
 
+  const result = await response.json().catch(() => ({}));
+
   if (!response.ok) {
-    const payload = await response.json().catch(() => ({}));
-    throw new Error(payload.message || "Upload failed");
+    throw new Error(result.message || `Upload failed (${response.status})`);
   }
 
-  const result = await response.json();
   return { url: result.data.url, type: result.data.type };
 }

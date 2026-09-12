@@ -5,7 +5,7 @@
  */
 
 import React from 'react';
-import { Calendar, Edit3 } from 'lucide-react';
+import { Calendar, Edit3, MessageSquare } from 'lucide-react';
 import { Avatar } from '../ui/Avatar';
 import { Button } from '../ui/Button';
 import { FollowButton } from './FollowButton';
@@ -18,6 +18,7 @@ export interface ProfileHeaderProps {
   onFollowersClick?: () => void;
   onFollowingClick?: () => void;
   onFollowChange?: (isFollowing: boolean) => void;
+  onMessageClick?: () => void;
 }
 
 export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
@@ -26,6 +27,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
   onFollowersClick,
   onFollowingClick,
   onFollowChange,
+  onMessageClick,
 }) => {
   return (
     <div className="bg-white dark:bg-[#1a1d23] border border-slate-200/80 dark:border-[#2d333b] rounded-2xl p-6 shadow-xs transition-colors">
@@ -38,7 +40,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
           className="ring-2 ring-slate-200 dark:ring-white/10"
         />
 
-        <div>
+        <div className="flex items-center gap-2">
           {profile.isOwnProfile ? (
             <Button
               type="button"
@@ -51,12 +53,26 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
               <span>Edit profile</span>
             </Button>
           ) : (
-            <FollowButton
-              userId={profile.id}
-              initialIsFollowing={profile.isFollowing}
-              onFollowChange={onFollowChange}
-              size="md"
-            />
+            <>
+              <FollowButton
+                userId={profile.id}
+                initialIsFollowing={profile.isFollowing}
+                onFollowChange={onFollowChange}
+                size="md"
+              />
+              {onMessageClick && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={onMessageClick}
+                  className="gap-1.5"
+                >
+                  <MessageSquare className="w-3.5 h-3.5" />
+                  <span>Message</span>
+                </Button>
+              )}
+            </>
           )}
         </div>
       </div>
