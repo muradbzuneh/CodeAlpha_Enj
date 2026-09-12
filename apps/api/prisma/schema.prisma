@@ -34,6 +34,7 @@ model User {
   storyReactions StoryReaction[]
   conversations ConversationParticipant[]
   messages Message[]
+  bookmarks Bookmark[]
 
   @@unique([email])
   @@map("user")
@@ -104,6 +105,7 @@ model Post {
   likes    Like[]
   notifications Notification[]
   hashtags PostHashtag[]
+  bookmarks Bookmark[]
 
   @@index([authorId])
   @@index([createdAt])
@@ -274,4 +276,17 @@ model PostHashtag {
   @@index([tag])
   @@index([postId])
   @@map("post_hashtag")
+}
+
+model Bookmark {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  postId    String
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  @@unique([userId, postId])
+  @@index([userId])
+  @@index([postId])
+  @@map("bookmark")
 }

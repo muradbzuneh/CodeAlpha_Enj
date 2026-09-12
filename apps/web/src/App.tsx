@@ -96,6 +96,7 @@ function RouterApp() {
     pageContent = (
       <ReelsPage
         onProfileClick={handleProfileClick}
+        onCommentClick={(post) => setActiveDiscussionPost(post)}
       />
     );
   } else if (currentPath.startsWith('/messages')) {

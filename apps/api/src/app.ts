@@ -14,6 +14,7 @@ import { storyReactionRouter } from "./routes/story-reaction.routes.js";
 import { uploadRouter } from "./routes/upload.routes.js";
 import { messageRouter } from "./routes/message.routes.js";
 import { exploreRouter } from "./routes/explore.routes.js";
+import { bookmarkRouter } from "./routes/bookmark.routes.js";
 import path from "path";
 export const app = express();
 
@@ -76,6 +77,7 @@ app.use("/api", storyReactionRouter);
 app.use("/api", uploadRouter);
 app.use("/api", messageRouter);
 app.use("/api", exploreRouter);
+app.use("/api", bookmarkRouter);
 
 app.get("/api/health/db", async (_req, res) => {
   try {

@@ -41,6 +41,7 @@ interface BackendPost {
   author: { id: string; name: string; username: string | null; image?: string | null };
   _count?: { comments: number; likes: number };
   isLiked?: boolean;
+  isBookmarked?: boolean;
 }
 
 function normalizePost(data: BackendPost): Post {
@@ -55,6 +56,7 @@ function normalizePost(data: BackendPost): Post {
     likesCount: data._count?.likes ?? 0,
     commentsCount: data._count?.comments ?? 0,
     isLiked: data.isLiked ?? false,
+    isBookmarked: data.isBookmarked ?? false,
   };
 }
 

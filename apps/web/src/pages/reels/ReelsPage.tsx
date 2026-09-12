@@ -8,7 +8,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Heart, MessageCircle, Share2, RefreshCw, AlertCircle } from 'lucide-react';
 import { Avatar } from '../../components/ui/Avatar';
-import { useToast } from '../../context/ToastContext';
+import { ShareDialog } from '../../components/post/ShareDialog';
 import { useAuth } from '../../context/AuthContext';
 import { api } from '../../services/api';
 import type { Post } from '../../types';
@@ -19,13 +19,13 @@ export interface ReelsPageProps {
 }
 
 export const ReelsPage: React.FC<ReelsPageProps> = ({ onProfileClick, onCommentClick }) => {
-  const { showToast } = useToast();
   const { user } = useAuth();
   const [posts, setPosts] = useState<Post[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [likeAnimating, setLikeAnimating] = useState(false);
+  const [isShareOpen, setIsShareOpen] = useState(false);
 
   const fetchPosts = useCallback(async () => {
     setIsLoading(true);
@@ -105,10 +105,7 @@ export const ReelsPage: React.FC<ReelsPageProps> = ({ onProfileClick, onCommentC
   };
 
   const handleShare = () => {
-    if (navigator.clipboard) {
-      navigator.clipboard.writeText(window.location.origin + `/?post=${currentPost?.id}`);
-      showToast('Post link copied!', 'info');
-    }
+    setIsShareOpen(true);
   };
 
   if (isLoading) {
@@ -275,6 +272,13 @@ export const ReelsPage: React.FC<ReelsPageProps> = ({ onProfileClick, onCommentC
           <div className="w-0.5 h-0.5 rounded-full bg-white" />
         </div>
       </div>
+
+      <ShareDialog
+        isOpen={isShareOpen}
+        onClose={() => setIsShareOpen(false)}
+        postUrl={window.location.origin + `/?post=${currentPost?.id}`}
+        postContent={currentPost?.content || ''}
+      />
     </div>
   );
 };

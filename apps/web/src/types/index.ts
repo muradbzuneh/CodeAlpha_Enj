@@ -45,6 +45,7 @@ export interface Post {
   likesCount: number;
   commentsCount: number;
   isLiked?: boolean;
+  isBookmarked?: boolean;
   mediaUrl?: string | null;
 }
 

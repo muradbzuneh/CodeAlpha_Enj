@@ -59,6 +59,10 @@ export async function getPersonalizedFeed(
             where: { userId: currentUser.id },
             select: { id: true },
           },
+          bookmarks: {
+            where: { userId: currentUser.id },
+            select: { id: true },
+          },
           _count: {
             select: {
               comments: true,
@@ -78,7 +82,9 @@ export async function getPersonalizedFeed(
     const data = posts.map((p) => ({
       ...p,
       isLiked: p.likes.length > 0,
+      isBookmarked: (p as any).bookmarks?.length > 0,
       likes: undefined,
+      bookmarks: undefined,
     }));
 
     const totalPages = Math.ceil(total / limit);

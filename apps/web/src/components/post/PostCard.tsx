@@ -6,9 +6,10 @@
  */
 
 import React, { useState } from 'react';
-import { Heart, MessageCircle, MoreHorizontal, Trash2, Edit3, Share2 } from 'lucide-react';
+import { Heart, MessageCircle, MoreHorizontal, Trash2, Edit3, Share2, Bookmark } from 'lucide-react';
 import { Avatar } from '../ui/Avatar';
 import { Dropdown } from '../ui/Dropdown';
+import { ShareDialog } from './ShareDialog';
 import { formatTimeAgo } from '../../lib/utils/date';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
@@ -60,6 +61,8 @@ export const PostCard: React.FC<PostCardProps> = ({
   const [likesCount, setLikesCount] = useState(post.likesCount);
   const [isLiked, setIsLiked] = useState(Boolean(post.isLiked));
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isShareOpen, setIsShareOpen] = useState(false);
+  const [isBookmarked, setIsBookmarked] = useState(Boolean(post.isBookmarked));
 
   // Sync state if post prop updates
   React.useEffect(() => {
@@ -129,9 +132,21 @@ export const PostCard: React.FC<PostCardProps> = ({
 
   const handleShare = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (navigator.clipboard) {
-      navigator.clipboard.writeText(window.location.origin + `/?post=${post.id}`);
-      showToast('Post link copied to clipboard', 'success');
+    setIsShareOpen(true);
+  };
+
+  const handleBookmark = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!user) {
+      showToast('Please sign in to bookmark posts', 'info');
+      return;
+    }
+    setIsBookmarked((prev) => !prev);
+    try {
+      const res = await api.bookmarks.toggle(post.id);
+      setIsBookmarked(res.isBookmarked);
+    } catch {
+      setIsBookmarked((prev) => !prev);
     }
   };
 
@@ -157,14 +172,9 @@ export const PostCard: React.FC<PostCardProps> = ({
         ]
       : []),
     {
-      label: 'Copy link',
+      label: 'Share',
       icon: <Share2 className="w-4 h-4" />,
-      onClick: () => {
-        if (navigator.clipboard) {
-          navigator.clipboard.writeText(window.location.origin + `/?post=${post.id}`);
-          showToast('Link copied', 'success');
-        }
-      },
+      onClick: () => setIsShareOpen(true),
     },
   ];
 
@@ -183,7 +193,7 @@ export const PostCard: React.FC<PostCardProps> = ({
         >
           <Avatar
             src={post.author.image}
-            name={post.author.name || post.author.username}
+            name={post.author.name || post.author.username || 'User'}
             size="md"
           />
           <div className="flex flex-col leading-tight">
@@ -263,13 +273,31 @@ export const PostCard: React.FC<PostCardProps> = ({
 
         <button
           type="button"
+          onClick={handleBookmark}
+          className={`flex items-center gap-1.5 text-xs font-medium transition-colors py-1 cursor-pointer ${
+            isBookmarked ? 'text-[#FFAA00]' : 'text-slate-400 dark:text-zinc-500 hover:text-[#FFAA00]'
+          }`}
+          aria-label={isBookmarked ? 'Remove bookmark' : 'Bookmark post'}
+        >
+          <Bookmark className={`w-3.5 h-3.5 ${isBookmarked ? 'fill-current' : ''}`} />
+        </button>
+
+        <button
+          type="button"
           onClick={handleShare}
-          className="flex items-center gap-1.5 text-xs font-medium text-slate-400 dark:text-zinc-500 hover:text-slate-700 dark:hover:text-zinc-300 transition-colors py-1 ml-auto cursor-pointer"
+          className="flex items-center gap-1.5 text-xs font-medium text-slate-400 dark:text-zinc-500 hover:text-slate-700 dark:hover:text-zinc-300 transition-colors py-1 cursor-pointer"
           aria-label="Share post"
         >
           <Share2 className="w-3.5 h-3.5" />
         </button>
       </div>
+
+      <ShareDialog
+        isOpen={isShareOpen}
+        onClose={() => setIsShareOpen(false)}
+        postUrl={window.location.origin + `/?post=${post.id}`}
+        postContent={post.content}
+      />
     </article>
   );
 };

@@ -1,19 +1,26 @@
 import { z } from "zod";
 
-export const createPostSchema = z.object({
-  content: z
-    .string()
-    .trim()
-    .min(1, "Post cannot be empty")
-    .max(2000, "Post cannot exceed 2000 characters"),
-});
+export const createPostSchema = z
+  .object({
+    content: z
+      .string()
+      .trim()
+      .max(2000, "Post cannot exceed 2000 characters")
+      .optional()
+      .default(""),
+    mediaUrl: z.string().url().nullable().optional().default(null),
+  })
+  .refine((data) => data.content.trim().length > 0 || data.mediaUrl, {
+    message: "Post must have text content or an attached media",
+  });
 
 export const updatePostSchema = z.object({
   content: z
     .string()
     .trim()
-    .min(1, "Post cannot be empty")
-    .max(2000, "Post cannot exceed 2000 characters"),
+    .max(2000, "Post cannot exceed 2000 characters")
+    .optional(),
+  mediaUrl: z.string().url().nullable().optional(),
 });
 
 export const postIdSchema = z.object({

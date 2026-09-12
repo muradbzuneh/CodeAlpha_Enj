@@ -8,6 +8,7 @@ import { searchService } from "./search.service";
 import { storiesService } from "./stories.service";
 import { notificationsService } from "./notifications.service";
 import { messagesService } from "./messages.service";
+import { bookmarkService } from "./bookmark.service";
 
 export const api = {
   auth: authService,
@@ -20,6 +21,7 @@ export const api = {
   stories: storiesService,
   notifications: notificationsService,
   messages: messagesService,
+  bookmarks: bookmarkService,
 
   getMode(): "live" {
     return "live";
