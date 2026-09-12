@@ -11,6 +11,10 @@ import { followRouter } from "./routes/follow.routes.js";
 import { storyRouter } from "./routes/story.routes.js";
 import { notificationRouter } from "./routes/notification.routes.js";
 import { storyReactionRouter } from "./routes/story-reaction.routes.js";
+import { uploadRouter } from "./routes/upload.routes.js";
+import { messageRouter } from "./routes/message.routes.js";
+import { exploreRouter } from "./routes/explore.routes.js";
+import path from "path";
 export const app = express();
 
 app.use(
@@ -21,6 +25,8 @@ app.use(
 );
 
 app.use(express.json());
+
+app.use("/uploads", express.static(path.resolve("uploads")));
 
 app.get("/api/me", async (req, res) => {
   try {
@@ -67,6 +73,9 @@ app.use("/api/posts", postRouter);
 app.use("/api", storyRouter);
 app.use("/api", notificationRouter);
 app.use("/api", storyReactionRouter);
+app.use("/api", uploadRouter);
+app.use("/api", messageRouter);
+app.use("/api", exploreRouter);
 
 app.get("/api/health/db", async (_req, res) => {
   try {

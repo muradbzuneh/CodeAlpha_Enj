@@ -8,7 +8,7 @@
  */
 
 import React, { useState } from 'react';
-import { Search, LogIn, UserPlus, Plus, LogOut } from 'lucide-react';
+import { Search, LogIn, UserPlus, Plus, LogOut, MessageSquare } from 'lucide-react';
 import { Logo } from '../ui/Logo';
 import { Avatar } from '../ui/Avatar';
 import { Button } from '../ui/Button';
@@ -106,6 +106,16 @@ export const Header: React.FC<HeaderProps> = ({
               </button>
 
               <NotificationBell onNavigate={onNavigate} />
+
+              <button
+                type="button"
+                onClick={() => onNavigate('/messages')}
+                className="relative p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-[#22272e] transition-colors cursor-pointer"
+                title="Messages"
+                aria-label="Messages"
+              >
+                <MessageSquare className="w-5 h-5 text-slate-600 dark:text-zinc-400" />
+              </button>
 
               <button
                 type="button"

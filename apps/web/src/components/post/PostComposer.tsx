@@ -6,12 +6,13 @@
  */
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Image, X, UploadCloud, Hash } from 'lucide-react';
+import { Send, Image, X, UploadCloud, Hash, Loader2 } from 'lucide-react';
 import { Avatar } from '../ui/Avatar';
 import { Button } from '../ui/Button';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { api } from '../../services/api';
+import { uploadFile } from '../../lib/upload';
 import type { Post } from '../../types';
 
 export interface PostComposerProps {
@@ -51,6 +52,7 @@ export const PostComposer: React.FC<PostComposerProps> = ({
   }, [initialContent]);
   const [isDraggingFile, setIsDraggingFile] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   if (!user) {
@@ -67,49 +69,55 @@ export const PostComposer: React.FC<PostComposerProps> = ({
   const isOverLimit = charCount > MAX_CHAR_LIMIT;
   const isEmpty = content.trim().length === 0 && !mediaUrl;
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (!file.type.startsWith('image/')) {
-      showToast('Please select a valid image file (JPEG, PNG, WebP)', 'error');
+    if (!file.type.startsWith('image/') && !file.type.startsWith('video/')) {
+      showToast('Please select an image or video file', 'error');
       return;
     }
 
-    if (file.size > 5 * 1024 * 1024) {
-      showToast('Image must be under 5MB', 'error');
+    if (file.size > 10 * 1024 * 1024) {
+      showToast('File must be under 10MB', 'error');
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = (loadEvent) => {
-      const dataUrl = loadEvent.target?.result as string;
-      setMediaUrl(dataUrl);
+    setIsUploading(true);
+    try {
+      const { url } = await uploadFile(file);
+      setMediaUrl(url);
       setShowMediaPicker(false);
-      showToast('Photo attached', 'info');
-    };
-    reader.readAsDataURL(file);
+      showToast('File attached', 'info');
+    } catch {
+      showToast('Failed to upload file', 'error');
+    } finally {
+      setIsUploading(false);
+    }
   };
 
-  const handleDrop = (e: React.DragEvent) => {
+  const handleDrop = async (e: React.DragEvent) => {
     e.preventDefault();
     setIsDraggingFile(false);
     const file = e.dataTransfer.files?.[0];
     if (!file) return;
 
-    if (!file.type.startsWith('image/')) {
-      showToast('Please drop an image file', 'error');
+    if (!file.type.startsWith('image/') && !file.type.startsWith('video/')) {
+      showToast('Please drop an image or video file', 'error');
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = (loadEvent) => {
-      const dataUrl = loadEvent.target?.result as string;
-      setMediaUrl(dataUrl);
+    setIsUploading(true);
+    try {
+      const { url } = await uploadFile(file);
+      setMediaUrl(url);
       setShowMediaPicker(false);
-      showToast('Photo attached', 'info');
-    };
-    reader.readAsDataURL(file);
+      showToast('File attached', 'info');
+    } catch {
+      showToast('Failed to upload file', 'error');
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   const insertTag = (tag: string) => {
@@ -259,7 +267,7 @@ export const PostComposer: React.FC<PostComposerProps> = ({
             <input
               ref={fileInputRef}
               type="file"
-              accept="image/png, image/jpeg, image/webp"
+              accept="image/*,video/*"
               onChange={handleFileChange}
               className="hidden"
             />
@@ -269,18 +277,20 @@ export const PostComposer: React.FC<PostComposerProps> = ({
               <div className="flex items-center gap-1">
                 <button
                   type="button"
-                  onClick={() => {
-                    setShowMediaPicker((prev) => !prev);
-                  }}
+                  onClick={() => setShowMediaPicker((prev) => !prev)}
+                  disabled={isUploading}
                   className={`p-2 rounded-xl transition-colors cursor-pointer ${
                     showMediaPicker || mediaUrl
                       ? 'text-[#FF3366] bg-rose-50 dark:bg-rose-950/30'
                       : 'text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#22272e]'
                   }`}
-                  title="Attach image"
-                  aria-label="Attach photo"
+                  title="Attach image or video"
                 >
-                  <Image className="w-4 h-4" />
+                  {isUploading ? (
+                    <span className="w-4 h-4 border-2 border-[#FF3366] border-t-transparent rounded-full animate-spin block" />
+                  ) : (
+                    <Image className="w-4 h-4" />
+                  )}
                 </button>
               </div>
 

@@ -27,6 +27,7 @@ export interface HomeFeedPageProps {
   onCommentClick: (post: Post) => void;
   onEditClick: (post: Post) => void;
   newlyCreatedPost?: Post | null;
+  onHashtagClick?: (tag: string) => void;
 }
 
 export const HomeFeedPage: React.FC<HomeFeedPageProps> = ({
@@ -34,6 +35,7 @@ export const HomeFeedPage: React.FC<HomeFeedPageProps> = ({
   onCommentClick,
   onEditClick,
   newlyCreatedPost,
+  onHashtagClick,
 }) => {
   const { user } = useAuth();
   const [posts, setPosts] = useState<Post[]>([]);
@@ -275,6 +277,7 @@ export const HomeFeedPage: React.FC<HomeFeedPageProps> = ({
               onProfileClick={onProfileClick}
               onCommentClick={onCommentClick}
               onEditClick={onEditClick}
+              onHashtagClick={onHashtagClick}
             />
           ))
         )}

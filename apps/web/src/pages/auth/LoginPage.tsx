@@ -107,16 +107,6 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onNavigate }) => {
           </Button>
         </form>
 
-        {/* Quick Reviewer Demo Fill */}
-        <div className="mt-6 pt-5 border-t border-slate-100 dark:border-[#262a32] text-center">
-          <button
-            type="button"
-            onClick={fillDemoAccount}
-            className="text-xs text-slate-500 dark:text-zinc-400 hover:text-[#FF3366] font-medium underline cursor-pointer"
-          >
-            Use sample account (alex.rivers@example.com)
-          </button>
-        </div>
 
         <div className="mt-4 text-center">
           <p className="text-xs text-slate-500 dark:text-zinc-400">

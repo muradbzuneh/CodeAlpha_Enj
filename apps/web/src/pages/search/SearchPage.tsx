@@ -18,6 +18,7 @@ export interface SearchPageProps {
   onProfileClick: (username: string | null) => void;
   onCommentClick: (post: Post) => void;
   onEditClick: (post: Post) => void;
+  onHashtagClick?: (tag: string) => void;
 }
 
 const POPULAR_TAGS = ['#TypeScript', '#ModernDesign', '#ENJStories', '#React', '#WebDev', '#CleanCode'];
@@ -27,6 +28,7 @@ export const SearchPage: React.FC<SearchPageProps> = ({
   onProfileClick,
   onCommentClick,
   onEditClick,
+  onHashtagClick,
 }) => {
   const [query, setQuery] = useState(initialQuery);
   const [activeTab, setActiveTab] = useState<'all' | 'posts' | 'people'>('all');
@@ -233,6 +235,7 @@ export const SearchPage: React.FC<SearchPageProps> = ({
                       onEditClick={onEditClick}
                       onPostUpdated={handlePostUpdated}
                       onPostDeleted={handlePostDeleted}
+                      onHashtagClick={onHashtagClick}
                     />
                   ))}
                 </div>

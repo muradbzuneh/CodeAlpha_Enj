@@ -7,7 +7,7 @@ import {
   getSuggestions,
   updateProfile,
 } from "../controllers/profile.controller.js";
-import { searchUsers } from "../controllers/search.controller.js";
+import { searchUsers, searchPostsByHashtag } from "../controllers/search.controller.js";
 import { optionalAuth } from "../middleware/optional-auth.js";
 import { requireAuth } from "../middleware/require-auth.js";
 import { validateBody } from "../middleware/validate.js";
@@ -21,5 +21,6 @@ profileRouter.get("/user/:userId/following", optionalAuth, getFollowing);
 
 profileRouter.get("/suggestions", optionalAuth, getSuggestions);
 profileRouter.get("/search/users", optionalAuth, searchUsers);
+profileRouter.get("/search/hashtag", optionalAuth, searchPostsByHashtag);
 profileRouter.get("/username/check", checkUsername);
 profileRouter.patch("/profile", requireAuth, validateBody(updateProfileSchema), updateProfile);

@@ -1,6 +1,7 @@
 import type { Request, Response } from "express";
 
 import { prisma } from "../lib/prisma.js";
+import { extractAndSaveHashtags, removeHashtags } from "../lib/hashtags.js";
 import {
   feedQuerySchema,
   postIdSchema,
@@ -36,6 +37,8 @@ export async function createPost(req: Request, res: Response) {
         },
       },
     });
+
+    await extractAndSaveHashtags(post.id, req.body.content);
 
     return res.status(201).json({
       status: "success",
@@ -282,6 +285,9 @@ export async function updatePost(req: Request, res: Response) {
       },
     });
 
+    await removeHashtags(post.id);
+    await extractAndSaveHashtags(post.id, req.body.content);
+
     return res.json({
       status: "success",
       data: updatedPost,
@@ -334,6 +340,7 @@ export async function deletePost(req: Request, res: Response) {
       });
     }
 
+    await removeHashtags(post.id);
     await prisma.post.delete({
       where: {
         id: post.id,

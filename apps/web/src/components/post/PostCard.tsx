@@ -15,6 +15,25 @@ import { useToast } from '../../context/ToastContext';
 import { api } from '../../services/api';
 import type { Post } from '../../types';
 
+function renderContentWithHashtags(content: string, onHashtagClick: (tag: string) => void) {
+  const parts = content.split(/(#[\w\u0590-\u05FF]+)/g);
+  return parts.map((part, i) => {
+    if (part.startsWith('#')) {
+      return (
+        <button
+          key={i}
+          type="button"
+          onClick={(e) => { e.stopPropagation(); onHashtagClick(part); }}
+          className="text-[#FF3366] font-semibold hover:underline cursor-pointer"
+        >
+          {part}
+        </button>
+      );
+    }
+    return part;
+  });
+}
+
 export interface PostCardProps {
   post: Post;
   onPostUpdated?: (updated: Post) => void;
@@ -22,6 +41,7 @@ export interface PostCardProps {
   onCommentClick?: (post: Post) => void;
   onProfileClick?: (username: string | null) => void;
   onEditClick?: (post: Post) => void;
+  onHashtagClick?: (tag: string) => void;
 }
 
 export const PostCard: React.FC<PostCardProps> = ({
@@ -31,6 +51,7 @@ export const PostCard: React.FC<PostCardProps> = ({
   onCommentClick,
   onProfileClick,
   onEditClick,
+  onHashtagClick,
 }) => {
   const { user } = useAuth();
   const { showToast } = useToast();
@@ -197,7 +218,9 @@ export const PostCard: React.FC<PostCardProps> = ({
 
       {/* Post body */}
       <div className="mt-3 text-sm text-slate-800 dark:text-zinc-200 leading-relaxed whitespace-pre-wrap break-words">
-        {post.content}
+        {onHashtagClick
+          ? renderContentWithHashtags(post.content, onHashtagClick)
+          : post.content}
       </div>
 
       {/* Attached Media */}
