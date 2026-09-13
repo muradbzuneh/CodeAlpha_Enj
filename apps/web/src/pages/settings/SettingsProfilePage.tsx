@@ -14,6 +14,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { useTheme } from '../../context/ThemeContext';
 import { api } from '../../services/api';
+import { uploadFile } from '../../lib/upload';
 
 export interface SettingsProfilePageProps {
   onNavigate: (path: string) => void;
@@ -32,6 +33,7 @@ export const SettingsProfilePage: React.FC<SettingsProfilePageProps> = ({ onNavi
   const [bio, setBio] = useState('');
   const [imageUrl, setImageUrl] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -141,8 +143,9 @@ export const SettingsProfilePage: React.FC<SettingsProfilePageProps> = ({ onNavi
                 variant="outline"
                 size="sm"
                 onClick={() => fileInputRef.current?.click()}
+                disabled={isUploading}
               >
-                Upload photo
+                {isUploading ? 'Uploading...' : 'Upload photo'}
               </Button>
               <Button
                 type="button"
@@ -178,16 +181,22 @@ export const SettingsProfilePage: React.FC<SettingsProfilePageProps> = ({ onNavi
           type="file"
           accept="image/*"
           className="hidden"
-          onChange={(e) => {
+          onChange={async (e) => {
             const file = e.target.files?.[0];
-            if (file) {
-              if (file.size > 4 * 1024 * 1024) {
-                showToast('Image must be under 4 MB', 'error');
-                return;
-              }
-              const reader = new FileReader();
-              reader.onload = (ev) => setImageUrl(ev.target?.result as string);
-              reader.readAsDataURL(file);
+            if (!file) return;
+            if (file.size > 4 * 1024 * 1024) {
+              showToast('Image must be under 4 MB', 'error');
+              return;
+            }
+            setIsUploading(true);
+            try {
+              const result = await uploadFile(file);
+              setImageUrl(result.url);
+            } catch (err: any) {
+              showToast(err?.message || 'Upload failed', 'error');
+            } finally {
+              setIsUploading(false);
+              e.target.value = '';
             }
           }}
         />
