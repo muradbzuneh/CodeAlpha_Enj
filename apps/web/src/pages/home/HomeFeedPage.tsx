@@ -9,7 +9,7 @@
  * Adaptive styling for both Default White (Light) mode and Dark mode.
  */
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { RefreshCw, AlertCircle, Sparkles, Plus, Users, Compass } from 'lucide-react';
 import { StoryBar } from '../../components/story/StoryBar';
 import { CreateStoryModal } from '../../components/story/CreateStoryModal';
@@ -27,6 +27,7 @@ export interface HomeFeedPageProps {
   onCommentClick: (post: Post) => void;
   onEditClick: (post: Post) => void;
   newlyCreatedPost?: Post | null;
+  onHashtagClick?: (tag: string) => void;
 }
 
 export const HomeFeedPage: React.FC<HomeFeedPageProps> = ({
@@ -34,6 +35,7 @@ export const HomeFeedPage: React.FC<HomeFeedPageProps> = ({
   onCommentClick,
   onEditClick,
   newlyCreatedPost,
+  onHashtagClick,
 }) => {
   const { user } = useAuth();
   const [posts, setPosts] = useState<Post[]>([]);
@@ -49,18 +51,25 @@ export const HomeFeedPage: React.FC<HomeFeedPageProps> = ({
   const [isViewerOpen, setIsViewerOpen] = useState(false);
   const [activeStoryIndex, setActiveStoryIndex] = useState(0);
 
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const pageRef = useRef(1);
+  const hasMoreRef = useRef(true);
+
   const fetchFeedAndStories = useCallback(async (refresh = false) => {
     if (refresh) setIsRefreshing(true);
     else setIsLoading(true);
     setError(null);
 
     try {
+      const page = 1;
       const [feedResponse, loadedStories] = await Promise.all([
-        api.feed.getPersonalized(1, 40),
+        api.feed.getPersonalized(page, 20),
         api.stories.getStories(),
       ]);
       setPosts(feedResponse.posts);
       setStories(loadedStories);
+      hasMoreRef.current = feedResponse.pagination.hasMore;
+      pageRef.current = 1;
 
       // Load following users if logged in
       if (user?.id) {
@@ -83,6 +92,32 @@ export const HomeFeedPage: React.FC<HomeFeedPageProps> = ({
   useEffect(() => {
     fetchFeedAndStories();
   }, [fetchFeedAndStories]);
+
+  const loadMore = useCallback(async () => {
+    if (isLoadingMore || !hasMoreRef.current) return;
+    setIsLoadingMore(true);
+    try {
+      const nextPage = pageRef.current + 1;
+      const res = await api.feed.getPersonalized(nextPage, 20);
+      setPosts((prev) => [...prev, ...res.posts]);
+      hasMoreRef.current = res.pagination.hasMore;
+      pageRef.current = nextPage;
+    } catch {
+      // silent
+    } finally {
+      setIsLoadingMore(false);
+    }
+  }, [isLoadingMore]);
+
+  useEffect(() => {
+    const onScroll = () => {
+      if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 600) {
+        loadMore();
+      }
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, [loadMore]);
 
   // If a post was created outside (e.g. from modal composer)
   useEffect(() => {
@@ -275,8 +310,15 @@ export const HomeFeedPage: React.FC<HomeFeedPageProps> = ({
               onProfileClick={onProfileClick}
               onCommentClick={onCommentClick}
               onEditClick={onEditClick}
+              onHashtagClick={onHashtagClick}
             />
           ))
+        )}
+
+        {isLoadingMore && (
+          <div className="py-4 flex justify-center">
+            <RefreshCw className="w-5 h-5 text-slate-400 animate-spin" />
+          </div>
         )}
       </div>
 

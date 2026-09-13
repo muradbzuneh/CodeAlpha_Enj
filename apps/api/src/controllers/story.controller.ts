@@ -21,6 +21,9 @@ export async function getStories(req: Request, res: Response) {
         views: currentUser
           ? { where: { userId: currentUser.id }, select: { id: true } }
           : false,
+        _count: {
+          select: { views: true },
+        },
       },
     });
 
@@ -35,6 +38,7 @@ export async function getStories(req: Request, res: Response) {
       createdAt: s.createdAt.toISOString(),
       expiresAt: s.expiresAt.toISOString(),
       isViewed: currentUser ? (s as any).views.length > 0 : false,
+      viewCount: s._count.views,
     }));
 
     return res.json({ status: "success", data });

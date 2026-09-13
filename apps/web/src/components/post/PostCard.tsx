@@ -6,14 +6,36 @@
  */
 
 import React, { useState } from 'react';
-import { Heart, MessageCircle, MoreHorizontal, Trash2, Edit3, Share2 } from 'lucide-react';
+import { Heart, MessageCircle, MoreHorizontal, Trash2, Edit3, Share2, Bookmark } from 'lucide-react';
 import { Avatar } from '../ui/Avatar';
 import { Dropdown } from '../ui/Dropdown';
+import { ShareDialog } from './ShareDialog';
+import { VideoPlayer } from './VideoPlayer';
 import { formatTimeAgo } from '../../lib/utils/date';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
+import { resolveMediaUrl } from '../../lib/resolveMediaUrl';
 import { api } from '../../services/api';
 import type { Post } from '../../types';
+
+function renderContentWithHashtags(content: string, onHashtagClick: (tag: string) => void) {
+  const parts = content.split(/(#[\w\u0590-\u05FF]+)/g);
+  return parts.map((part, i) => {
+    if (part.startsWith('#')) {
+      return (
+        <button
+          key={i}
+          type="button"
+          onClick={(e) => { e.stopPropagation(); onHashtagClick(part); }}
+          className="text-[#FF3366] font-semibold hover:underline cursor-pointer"
+        >
+          {part}
+        </button>
+      );
+    }
+    return part;
+  });
+}
 
 export interface PostCardProps {
   post: Post;
@@ -22,6 +44,7 @@ export interface PostCardProps {
   onCommentClick?: (post: Post) => void;
   onProfileClick?: (username: string | null) => void;
   onEditClick?: (post: Post) => void;
+  onHashtagClick?: (tag: string) => void;
 }
 
 export const PostCard: React.FC<PostCardProps> = ({
@@ -31,6 +54,7 @@ export const PostCard: React.FC<PostCardProps> = ({
   onCommentClick,
   onProfileClick,
   onEditClick,
+  onHashtagClick,
 }) => {
   const { user } = useAuth();
   const { showToast } = useToast();
@@ -39,6 +63,8 @@ export const PostCard: React.FC<PostCardProps> = ({
   const [likesCount, setLikesCount] = useState(post.likesCount);
   const [isLiked, setIsLiked] = useState(Boolean(post.isLiked));
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isShareOpen, setIsShareOpen] = useState(false);
+  const [isBookmarked, setIsBookmarked] = useState(Boolean(post.isBookmarked));
 
   // Sync state if post prop updates
   React.useEffect(() => {
@@ -108,9 +134,21 @@ export const PostCard: React.FC<PostCardProps> = ({
 
   const handleShare = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (navigator.clipboard) {
-      navigator.clipboard.writeText(window.location.origin + `/?post=${post.id}`);
-      showToast('Post link copied to clipboard', 'success');
+    setIsShareOpen(true);
+  };
+
+  const handleBookmark = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!user) {
+      showToast('Please sign in to bookmark posts', 'info');
+      return;
+    }
+    setIsBookmarked((prev) => !prev);
+    try {
+      const res = await api.bookmarks.toggle(post.id);
+      setIsBookmarked(res.isBookmarked);
+    } catch {
+      setIsBookmarked((prev) => !prev);
     }
   };
 
@@ -136,14 +174,9 @@ export const PostCard: React.FC<PostCardProps> = ({
         ]
       : []),
     {
-      label: 'Copy link',
+      label: 'Share',
       icon: <Share2 className="w-4 h-4" />,
-      onClick: () => {
-        if (navigator.clipboard) {
-          navigator.clipboard.writeText(window.location.origin + `/?post=${post.id}`);
-          showToast('Link copied', 'success');
-        }
-      },
+      onClick: () => setIsShareOpen(true),
     },
   ];
 
@@ -162,7 +195,7 @@ export const PostCard: React.FC<PostCardProps> = ({
         >
           <Avatar
             src={post.author.image}
-            name={post.author.name || post.author.username}
+            name={post.author.name || post.author.username || 'User'}
             size="md"
           />
           <div className="flex flex-col leading-tight">
@@ -197,19 +230,25 @@ export const PostCard: React.FC<PostCardProps> = ({
 
       {/* Post body */}
       <div className="mt-3 text-sm text-slate-800 dark:text-zinc-200 leading-relaxed whitespace-pre-wrap break-words">
-        {post.content}
+        {onHashtagClick
+          ? renderContentWithHashtags(post.content, onHashtagClick)
+          : post.content}
       </div>
 
       {/* Attached Media */}
       {post.mediaUrl && (
-        <div className="mt-3 overflow-hidden rounded-xl border border-slate-200/80 dark:border-[#2d333b] max-h-96 bg-slate-100 dark:bg-black/40">
-          <img
-            src={post.mediaUrl}
-            alt="Attached post visual"
-            className="w-full h-auto object-cover max-h-96 hover:scale-[1.01] transition-transform duration-200"
-            loading="lazy"
-            referrerPolicy="no-referrer"
-          />
+        <div className="mt-3 overflow-hidden rounded-xl border border-slate-200/80 dark:border-[#2d333b] bg-slate-100 dark:bg-black/40">
+          {/\.(mp4|webm|ogg|mov|avi|mkv|quicktime)$/i.test(post.mediaUrl) || post.mediaUrl.includes('video') ? (
+            <VideoPlayer src={resolveMediaUrl(post.mediaUrl)} className="max-h-96" />
+          ) : (
+            <img
+              src={resolveMediaUrl(post.mediaUrl)}
+              alt="Attached post visual"
+              className="w-full h-auto object-cover max-h-96 hover:scale-[1.01] transition-transform duration-200"
+              loading="lazy"
+              referrerPolicy="no-referrer"
+            />
+          )}
         </div>
       )}
 
@@ -240,13 +279,31 @@ export const PostCard: React.FC<PostCardProps> = ({
 
         <button
           type="button"
+          onClick={handleBookmark}
+          className={`flex items-center gap-1.5 text-xs font-medium transition-colors py-1 cursor-pointer ${
+            isBookmarked ? 'text-[#FFAA00]' : 'text-slate-400 dark:text-zinc-500 hover:text-[#FFAA00]'
+          }`}
+          aria-label={isBookmarked ? 'Remove bookmark' : 'Bookmark post'}
+        >
+          <Bookmark className={`w-3.5 h-3.5 ${isBookmarked ? 'fill-current' : ''}`} />
+        </button>
+
+        <button
+          type="button"
           onClick={handleShare}
-          className="flex items-center gap-1.5 text-xs font-medium text-slate-400 dark:text-zinc-500 hover:text-slate-700 dark:hover:text-zinc-300 transition-colors py-1 ml-auto cursor-pointer"
+          className="flex items-center gap-1.5 text-xs font-medium text-slate-400 dark:text-zinc-500 hover:text-slate-700 dark:hover:text-zinc-300 transition-colors py-1 cursor-pointer"
           aria-label="Share post"
         >
           <Share2 className="w-3.5 h-3.5" />
         </button>
       </div>
+
+      <ShareDialog
+        isOpen={isShareOpen}
+        onClose={() => setIsShareOpen(false)}
+        postUrl={window.location.origin + `/?post=${post.id}`}
+        postContent={post.content}
+      />
     </article>
   );
 };

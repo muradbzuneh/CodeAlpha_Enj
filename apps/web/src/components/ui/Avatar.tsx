@@ -3,6 +3,7 @@
  */
 
 import React, { useState } from 'react';
+import { resolveMediaUrl } from '../../lib/resolveMediaUrl';
 
 export interface AvatarProps {
   src?: string | null;
@@ -30,6 +31,7 @@ export const Avatar: React.FC<AvatarProps> = ({ src, name, size = 'md', classNam
   }[size];
 
   const showFallback = !src || imageError;
+  const resolvedSrc = resolveMediaUrl(src);
 
   return (
     <div
@@ -37,7 +39,7 @@ export const Avatar: React.FC<AvatarProps> = ({ src, name, size = 'md', classNam
     >
       {!showFallback ? (
         <img
-          src={src}
+          src={resolvedSrc}
           alt={name}
           onError={() => setImageError(true)}
           referrerPolicy="no-referrer"

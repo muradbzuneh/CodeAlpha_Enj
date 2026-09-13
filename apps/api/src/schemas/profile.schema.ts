@@ -14,7 +14,7 @@ export const updateProfileSchema = z.object({
   name: z
     .string()
     .trim()
-    .min(2, "Name must contain at least 2 characters")
+    .min(1, "Name must contain at least 1 character")
     .max(50, "Name must contain at most 50 characters")
     .optional(),
   username: usernameSchema.optional(),
@@ -24,7 +24,8 @@ export const updateProfileSchema = z.object({
     .max(200, "Bio must contain at most 200 characters")
     .optional()
     .nullable(),
-  image: z.url("Image must be a valid URL").optional(),
+  image: z.string().optional(),
+  bannerUrl: z.string().optional(),
 });
 
 export const usernameCheckSchema = z.object({

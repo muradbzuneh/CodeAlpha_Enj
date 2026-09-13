@@ -7,7 +7,7 @@ export async function getPersonalizedFeed(
   res: Response,
 ) {
   try {
-    const currentUser = res.locals.session.user;
+    const currentUser = res.locals.session?.user;
 
     const parsed = feedQuerySchema.safeParse(req.query);
     if (!parsed.success) {
@@ -21,20 +21,19 @@ export async function getPersonalizedFeed(
     const { page, limit } = parsed.data;
     const skip = (page - 1) * limit;
 
-    const following = await prisma.follow.findMany({
-      where: {
-        followerId: currentUser.id,
-      },
-      select: {
-        followingId: true,
-      },
-    });
+    let authorIds: string[] | undefined = undefined;
 
-    // If user follows nobody, show ALL posts (global discover feed)
-    const hasFollowing = following.length > 0;
-    const authorIds = hasFollowing
-      ? [currentUser.id, ...following.map((follow) => follow.followingId)]
-      : undefined;
+    if (currentUser) {
+      const following = await prisma.follow.findMany({
+        where: { followerId: currentUser.id },
+        select: { followingId: true },
+      });
+
+      const hasFollowing = following.length > 0;
+      if (hasFollowing) {
+        authorIds = [currentUser.id, ...following.map((f) => f.followingId)];
+      }
+    }
 
     const [posts, total] = await Promise.all([
       prisma.post.findMany({
@@ -55,10 +54,12 @@ export async function getPersonalizedFeed(
               image: true,
             },
           },
-          likes: {
-            where: { userId: currentUser.id },
-            select: { id: true },
-          },
+          likes: currentUser
+            ? { where: { userId: currentUser.id }, select: { id: true } }
+            : false,
+          bookmarks: currentUser
+            ? { where: { userId: currentUser.id }, select: { id: true } }
+            : false,
           _count: {
             select: {
               comments: true,
@@ -77,8 +78,10 @@ export async function getPersonalizedFeed(
 
     const data = posts.map((p) => ({
       ...p,
-      isLiked: p.likes.length > 0,
+      isLiked: currentUser ? (p as any).likes?.length > 0 : false,
+      isBookmarked: currentUser ? (p as any).bookmarks?.length > 0 : false,
       likes: undefined,
+      bookmarks: undefined,
     }));
 
     const totalPages = Math.ceil(total / limit);

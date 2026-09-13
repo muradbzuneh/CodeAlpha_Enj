@@ -109,6 +109,9 @@ export async function getTrendingPosts(req: Request, res: Response) {
         likes: currentUser
           ? { where: { userId: currentUser.id }, select: { id: true } }
           : false,
+        bookmarks: currentUser
+          ? { where: { userId: currentUser.id }, select: { id: true } }
+          : false,
         _count: {
           select: { comments: true, likes: true },
         },
@@ -118,7 +121,9 @@ export async function getTrendingPosts(req: Request, res: Response) {
     const data = fullPosts.map((p) => ({
       ...p,
       isLiked: currentUser ? (p as any).likes?.length > 0 : false,
+      isBookmarked: currentUser ? (p as any).bookmarks?.length > 0 : false,
       likes: undefined,
+      bookmarks: undefined,
     }));
 
     // Preserve the score-based ordering from the raw query

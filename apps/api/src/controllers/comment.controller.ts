@@ -26,6 +26,7 @@ export async function createComment(req: Request, res: Response) {
       },
       select: {
         id: true,
+        authorId: true,
       },
     });
 
@@ -53,6 +54,19 @@ export async function createComment(req: Request, res: Response) {
         },
       },
     });
+
+    if (user.id !== post.authorId) {
+      const actorName = user.name || user.username || "Someone";
+      await prisma.notification.create({
+        data: {
+          type: "comment",
+          message: `${actorName} commented on your post`,
+          actorId: user.id,
+          userId: post.authorId,
+          postId: post.id,
+        },
+      }).catch(() => {});
+    }
 
     return res.status(201).json({
       status: "success",

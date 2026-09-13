@@ -12,6 +12,7 @@ interface BackendStory {
   createdAt: string;
   expiresAt: string;
   isViewed?: boolean;
+  viewCount?: number;
 }
 
 function normalizeStory(data: BackendStory): Story {
@@ -26,6 +27,7 @@ function normalizeStory(data: BackendStory): Story {
     createdAt: data.createdAt,
     expiresAt: data.expiresAt,
     isViewed: data.isViewed ?? false,
+    viewCount: data.viewCount ?? 0,
   };
 }
 
@@ -52,5 +54,19 @@ export const storiesService = {
 
   async delete(storyId: string): Promise<void> {
     await apiClient.delete(`/api/stories/${storyId}`);
+  },
+
+  async addReaction(storyId: string, content: string): Promise<unknown> {
+    const res = await apiClient.post<{ data: unknown }>(`/api/stories/${storyId}/reactions`, { content });
+    return res.data;
+  },
+
+  async getReactions(storyId: string): Promise<unknown[]> {
+    const res = await apiClient.get<{ data: unknown[] }>(`/api/stories/${storyId}/reactions`);
+    return Array.isArray(res.data) ? res.data : [];
+  },
+
+  async deleteReaction(storyId: string, reactionId: string): Promise<void> {
+    await apiClient.delete(`/api/stories/${storyId}/reactions/${reactionId}`);
   },
 };

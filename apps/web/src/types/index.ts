@@ -20,6 +20,7 @@ export interface Profile {
   name: string;
   bio?: string | null;
   image?: string | null;
+  bannerUrl?: string | null;
   postCount: number;
   followerCount: number;
   followingCount: number;
@@ -45,6 +46,7 @@ export interface Post {
   likesCount: number;
   commentsCount: number;
   isLiked?: boolean;
+  isBookmarked?: boolean;
   mediaUrl?: string | null;
 }
 
@@ -111,6 +113,7 @@ export interface Story {
   createdAt: string;
   expiresAt: string;
   isViewed?: boolean;
+  viewCount?: number;
 }
 
 export interface CreateStoryInput {

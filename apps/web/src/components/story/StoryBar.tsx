@@ -7,7 +7,7 @@
  */
 
 import React from 'react';
-import { Plus, Sparkles } from 'lucide-react';
+import { Plus, Sparkles, Eye } from 'lucide-react';
 import { Avatar } from '../ui/Avatar';
 import { useAuth } from '../../context/AuthContext';
 import type { Story } from '../../types';
@@ -75,6 +75,12 @@ export const StoryBar: React.FC<StoryBarProps> = ({
           <span className="text-[11px] font-semibold text-slate-700 dark:text-zinc-300 max-w-[64px] truncate text-center">
             {myStories.length > 0 ? 'Your Story' : 'Add Story'}
           </span>
+          {myStories.length > 0 && (myStories[0].viewCount ?? 0) > 0 && (
+            <span className="text-[10px] text-slate-400 dark:text-zinc-500 flex items-center gap-0.5">
+              <Eye className="w-3 h-3" />
+              {myStories[0].viewCount}
+            </span>
+          )}
         </div>
 
         {/* Community member stories */}

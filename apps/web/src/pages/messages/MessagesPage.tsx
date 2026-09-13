@@ -1,0 +1,110 @@
+import React, { useState, useEffect } from 'react';
+import { MessageSquare, Loader2 } from 'lucide-react';
+import { ConversationItem } from '../../components/messages/ConversationItem';
+import { ChatPanel } from '../../components/messages/ChatPanel';
+import { useAuth } from '../../context/AuthContext';
+import { api } from '../../services/api';
+
+interface Conversation {
+  id: string;
+  otherUser: { id: string; name: string; username: string | null; image?: string | null } | null;
+  lastMessage: { content: string; createdAt: string; authorName: string } | null;
+  unreadCount: number;
+  createdAt: string;
+}
+
+export interface MessagesPageProps {
+  initialConversationId?: string;
+}
+
+export const MessagesPage: React.FC<MessagesPageProps> = ({ initialConversationId }) => {
+  const { user } = useAuth();
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [activeId, setActiveId] = useState<string | null>(initialConversationId || null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    if (!user) return;
+    let mounted = true;
+    const load = async () => {
+      setIsLoading(true);
+      try {
+        const data = await api.messages.getConversations();
+        if (mounted) setConversations(data);
+      } catch {} finally {
+        if (mounted) setIsLoading(false);
+      }
+    };
+    load();
+    const interval = setInterval(load, 10000);
+    return () => { mounted = false; clearInterval(interval); };
+  }, [user]);
+
+  useEffect(() => {
+    if (initialConversationId) setActiveId(initialConversationId);
+  }, [initialConversationId]);
+
+  if (!user) {
+    return (
+      <div className="bg-white dark:bg-[#1a1d23] border border-slate-200/80 dark:border-[#2d333b] rounded-2xl p-10 text-center shadow-xs transition-colors">
+        <h2 className="text-base font-bold text-slate-900 dark:text-[#f3f4f6]">Sign in to view messages</h2>
+        <p className="text-xs text-slate-500 dark:text-zinc-400 mt-1">Connect with others through direct messages.</p>
+      </div>
+    );
+  }
+
+  const activeConversation = conversations.find((c) => c.id === activeId);
+  const showChat = activeId && activeConversation;
+
+  return (
+    <div className="bg-white dark:bg-[#1a1d23] border border-slate-200/80 dark:border-[#2d333b] rounded-2xl shadow-xs transition-colors overflow-hidden h-[calc(100vh-10rem)]">
+      <div className="flex h-full">
+        {/* Conversation List */}
+        <div className={`${showChat ? 'hidden md:flex' : 'flex'} flex-col w-full md:w-80 border-r border-slate-200/80 dark:border-[#2d333b]`}>
+          <div className="px-4 py-3 border-b border-slate-200/80 dark:border-[#2d333b]">
+            <h2 className="text-sm font-bold text-slate-900 dark:text-[#f3f4f6]">Messages</h2>
+          </div>
+          <div className="flex-1 overflow-y-auto">
+            {isLoading ? (
+              <div className="flex items-center justify-center py-10">
+                <Loader2 className="w-5 h-5 text-slate-400 animate-spin" />
+              </div>
+            ) : conversations.length === 0 ? (
+              <div className="text-center py-10 px-4">
+                <MessageSquare className="w-8 h-8 text-slate-300 dark:text-zinc-600 mx-auto mb-2" />
+                <p className="text-xs text-slate-500 dark:text-zinc-400">No conversations yet.</p>
+              </div>
+            ) : (
+              conversations.map((conv) => (
+                <ConversationItem
+                  key={conv.id}
+                  conversation={conv}
+                  isActive={conv.id === activeId}
+                  onClick={() => setActiveId(conv.id)}
+                />
+              ))
+            )}
+          </div>
+        </div>
+
+        {/* Chat Panel */}
+        <div className={`${showChat ? 'flex' : 'hidden md:flex'} flex-1 flex-col`}>
+          {showChat && activeConversation?.otherUser ? (
+            <ChatPanel
+              conversationId={activeId!}
+              otherUser={activeConversation.otherUser}
+              onBack={() => setActiveId(null)}
+            />
+          ) : (
+            <div className="flex-1 flex items-center justify-center">
+              <div className="text-center">
+                <MessageSquare className="w-10 h-10 text-slate-300 dark:text-zinc-600 mx-auto mb-2" />
+                <p className="text-sm text-slate-500 dark:text-zinc-400">Select a conversation to start chatting</p>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};

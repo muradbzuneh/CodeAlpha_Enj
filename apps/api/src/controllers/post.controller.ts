@@ -1,6 +1,7 @@
 import type { Request, Response } from "express";
 
 import { prisma } from "../lib/prisma.js";
+import { extractAndSaveHashtags, removeHashtags } from "../lib/hashtags.js";
 import {
   feedQuerySchema,
   postIdSchema,
@@ -10,9 +11,13 @@ export async function createPost(req: Request, res: Response) {
   try {
     const user = res.locals.session.user;
 
+    const content = req.body.content || "";
+    const mediaUrl = req.body.mediaUrl || null;
+
     const post = await prisma.post.create({
       data: {
-        content: req.body.content,
+        content,
+        mediaUrl,
         authorId: user.id,
       },
 
@@ -35,6 +40,10 @@ export async function createPost(req: Request, res: Response) {
         },
       },
     });
+
+    if (content) {
+      await extractAndSaveHashtags(post.id, content);
+    }
 
     return res.status(201).json({
       status: "success",
@@ -89,6 +98,9 @@ export async function getPosts(req: Request, res: Response) {
           likes: currentUser
             ? { where: { userId: currentUser.id }, select: { id: true } }
             : false,
+          bookmarks: currentUser
+            ? { where: { userId: currentUser.id }, select: { id: true } }
+            : false,
 
           _count: {
             select: {
@@ -105,7 +117,9 @@ export async function getPosts(req: Request, res: Response) {
     const data = posts.map((p) => ({
       ...p,
       isLiked: currentUser ? (p as any).likes?.length > 0 : false,
+      isBookmarked: currentUser ? (p as any).bookmarks?.length > 0 : false,
       likes: undefined,
+      bookmarks: undefined,
     }));
 
     const totalPages = Math.ceil(total / limit);
@@ -181,6 +195,9 @@ export async function getPostById(req: Request, res: Response) {
         likes: currentUser
           ? { where: { userId: currentUser.id }, select: { id: true } }
           : false,
+        bookmarks: currentUser
+          ? { where: { userId: currentUser.id }, select: { id: true } }
+          : false,
 
         _count: {
           select: {
@@ -199,10 +216,11 @@ export async function getPostById(req: Request, res: Response) {
     }
 
     const isLiked = currentUser ? (post as any).likes?.length > 0 : false;
+    const isBookmarked = currentUser ? (post as any).bookmarks?.length > 0 : false;
 
     return res.json({
       status: "success",
-      data: { ...post, likes: undefined, isLiked },
+      data: { ...post, likes: undefined, bookmarks: undefined, isLiked, isBookmarked },
     });
   } catch (error) {
     console.error("GET POST ERROR:", error);
@@ -258,7 +276,8 @@ export async function updatePost(req: Request, res: Response) {
       },
 
       data: {
-        content: req.body.content,
+        content: req.body.content !== undefined ? req.body.content : undefined,
+        mediaUrl: req.body.mediaUrl !== undefined ? req.body.mediaUrl : undefined,
       },
 
       include: {
@@ -279,6 +298,11 @@ export async function updatePost(req: Request, res: Response) {
         },
       },
     });
+
+    await removeHashtags(post.id);
+    if (updatedPost.content) {
+      await extractAndSaveHashtags(post.id, updatedPost.content);
+    }
 
     return res.json({
       status: "success",
@@ -332,6 +356,7 @@ export async function deletePost(req: Request, res: Response) {
       });
     }
 
+    await removeHashtags(post.id);
     await prisma.post.delete({
       where: {
         id: post.id,

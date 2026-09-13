@@ -8,6 +8,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { ThemeProvider } from './context/ThemeContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ToastProvider } from './context/ToastContext';
+import { Preloader } from './components/ui/Preloader';
 import { MainLayout } from './components/layout/MainLayout';
 import { HomeFeedPage } from './pages/home/HomeFeedPage';
 import { ExplorePage } from './pages/explore/ExplorePage';
@@ -17,6 +18,7 @@ import { LoginPage } from './pages/auth/LoginPage';
 import { SignupPage } from './pages/auth/SignupPage';
 import { SearchPage } from './pages/search/SearchPage';
 import { ReelsPage } from './pages/reels/ReelsPage';
+import { MessagesPage } from './pages/messages/MessagesPage';
 import { HumanizePage } from './pages/humanize/HumanizePage';
 import { PostDetailModal } from './components/post/PostDetailModal';
 import { EditPostModal } from './components/post/EditPostModal';
@@ -24,6 +26,7 @@ import type { Post } from './types';
 
 function RouterApp() {
   const { user, isLoading: isAuthLoading } = useAuth();
+  const [showPreloader, setShowPreloader] = useState(true);
 
   // Route state
   const [currentPath, setCurrentPath] = useState<string>(() => {
@@ -71,6 +74,10 @@ function RouterApp() {
     }
   }, [navigate]);
 
+  const handleHashtagClick = useCallback((tag: string) => {
+    navigate(`/search?q=${encodeURIComponent(tag)}`);
+  }, [navigate]);
+
   // Protected route redirects
   useEffect(() => {
     if (!isAuthLoading) {
@@ -91,6 +98,14 @@ function RouterApp() {
     pageContent = (
       <ReelsPage
         onProfileClick={handleProfileClick}
+        onCommentClick={(post) => setActiveDiscussionPost(post)}
+      />
+    );
+  } else if (currentPath.startsWith('/messages')) {
+    const convId = currentPath.replace('/messages/', '').split('/')[0] || undefined;
+    pageContent = (
+      <MessagesPage
+        initialConversationId={convId}
       />
     );
   } else if (currentPath === '/humanize') {
@@ -108,6 +123,8 @@ function RouterApp() {
         onProfileClick={handleProfileClick}
         onCommentClick={(post) => setActiveDiscussionPost(post)}
         onEditClick={(post) => setActiveEditPost(post)}
+        onNavigate={navigate}
+        onHashtagClick={handleHashtagClick}
       />
     );
   } else if (currentPath.startsWith('/profile/')) {
@@ -129,6 +146,7 @@ function RouterApp() {
         onProfileClick={handleProfileClick}
         onCommentClick={(post) => setActiveDiscussionPost(post)}
         onEditClick={(post) => setActiveEditPost(post)}
+        onHashtagClick={handleHashtagClick}
       />
     );
   } else {
@@ -139,6 +157,7 @@ function RouterApp() {
         onCommentClick={(post) => setActiveDiscussionPost(post)}
         onEditClick={(post) => setActiveEditPost(post)}
         newlyCreatedPost={newlyCreatedPost}
+        onHashtagClick={handleHashtagClick}
       />
     );
   }
@@ -147,6 +166,8 @@ function RouterApp() {
 
   return (
     <>
+      {showPreloader && <Preloader onComplete={() => setShowPreloader(false)} />}
+
       {isAuthPage ? (
         <div className="min-h-screen bg-white dark:bg-[#0f1115] text-slate-900 dark:text-[#e1e1e1] transition-colors">
           {pageContent}
