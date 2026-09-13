@@ -5,13 +5,18 @@ services:
       dockerfile: Dockerfile
     container_name: enj-api
     ports:
-      - "4000:4000"
+      - "4001:4001"
     environment:
-      PORT: 4000
+      PORT: 4001
       DATABASE_URL: postgresql://enj_user:enj_password@db:5432/enj_db
+      FRONTEND_URL: http://localhost:3000
+      BETTER_AUTH_URL: http://localhost:4001
+      BETTER_AUTH_SECRET: dev-secret-change-in-production
     depends_on:
       db:
         condition: service_healthy
+    volumes:
+      - uploads_data:/app/uploads
 
   db:
     image: postgres:17
@@ -33,3 +38,4 @@ services:
 
 volumes:
   enj_postgres_data:
+  uploads_data:
