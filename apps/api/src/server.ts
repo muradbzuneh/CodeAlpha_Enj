@@ -5,7 +5,7 @@ import { toNodeHandler } from "better-auth/node";
 
 const authHandler = toNodeHandler(auth);
 
-const ALLOWED_ORIGIN = "http://localhost:3000";
+const ALLOWED_ORIGIN = process.env.FRONTEND_URL || "http://localhost:3000";
 
 function setCorsHeaders(res: import("http").ServerResponse, origin: string | undefined) {
   if (origin === ALLOWED_ORIGIN) {
@@ -53,6 +53,6 @@ process.on("unhandledRejection", (err) => {
   console.error("Unhandled rejection:", err);
 });
 
-server.listen(4001, () => {
-  console.log("Server is running on port 4001");
+server.listen(process.env.PORT || 4001, () => {
+  console.log(`Server is running on port ${process.env.PORT || 4001}`);
 });

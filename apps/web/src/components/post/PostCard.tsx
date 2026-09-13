@@ -14,6 +14,7 @@ import { VideoPlayer } from './VideoPlayer';
 import { formatTimeAgo } from '../../lib/utils/date';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
+import { resolveMediaUrl } from '../../lib/resolveMediaUrl';
 import { api } from '../../services/api';
 import type { Post } from '../../types';
 
@@ -238,10 +239,10 @@ export const PostCard: React.FC<PostCardProps> = ({
       {post.mediaUrl && (
         <div className="mt-3 overflow-hidden rounded-xl border border-slate-200/80 dark:border-[#2d333b] bg-slate-100 dark:bg-black/40">
           {/\.(mp4|webm|ogg|mov|avi|mkv|quicktime)$/i.test(post.mediaUrl) || post.mediaUrl.includes('video') ? (
-            <VideoPlayer src={post.mediaUrl} className="max-h-96" />
+            <VideoPlayer src={resolveMediaUrl(post.mediaUrl)} className="max-h-96" />
           ) : (
             <img
-              src={post.mediaUrl}
+              src={resolveMediaUrl(post.mediaUrl)}
               alt="Attached post visual"
               className="w-full h-auto object-cover max-h-96 hover:scale-[1.01] transition-transform duration-200"
               loading="lazy"

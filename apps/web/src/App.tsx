@@ -8,6 +8,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { ThemeProvider } from './context/ThemeContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ToastProvider } from './context/ToastContext';
+import { Preloader } from './components/ui/Preloader';
 import { MainLayout } from './components/layout/MainLayout';
 import { HomeFeedPage } from './pages/home/HomeFeedPage';
 import { ExplorePage } from './pages/explore/ExplorePage';
@@ -25,6 +26,7 @@ import type { Post } from './types';
 
 function RouterApp() {
   const { user, isLoading: isAuthLoading } = useAuth();
+  const [showPreloader, setShowPreloader] = useState(true);
 
   // Route state
   const [currentPath, setCurrentPath] = useState<string>(() => {
@@ -164,6 +166,8 @@ function RouterApp() {
 
   return (
     <>
+      {showPreloader && <Preloader onComplete={() => setShowPreloader(false)} />}
+
       {isAuthPage ? (
         <div className="min-h-screen bg-white dark:bg-[#0f1115] text-slate-900 dark:text-[#e1e1e1] transition-colors">
           {pageContent}

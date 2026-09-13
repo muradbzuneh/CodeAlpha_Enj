@@ -13,6 +13,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { api } from '../../services/api';
 import { uploadFile } from '../../lib/upload';
+import { resolveMediaUrl } from '../../lib/resolveMediaUrl';
 import type { Post } from '../../types';
 
 export interface PostComposerProps {
@@ -190,7 +191,7 @@ export const PostComposer: React.FC<PostComposerProps> = ({
             {mediaUrl && (
               <div className="relative mt-2 rounded-xl overflow-hidden border border-slate-200/80 dark:border-[#2d333b] max-h-64 bg-slate-100 dark:bg-black/30 group">
                 <img
-                  src={mediaUrl}
+                  src={resolveMediaUrl(mediaUrl)}
                   alt="Attached preview"
                   className="w-full h-auto object-cover max-h-64"
                   referrerPolicy="no-referrer"

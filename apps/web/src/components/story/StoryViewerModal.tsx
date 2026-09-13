@@ -4,6 +4,7 @@ import { Avatar } from '../ui/Avatar';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { api } from '../../services/api';
+import { resolveMediaUrl } from '../../lib/resolveMediaUrl';
 import type { Story } from '../../types';
 
 export interface StoryViewerModalProps {
@@ -197,7 +198,7 @@ export const StoryViewerModal: React.FC<StoryViewerModalProps> = ({
 
         {currentStory.mediaUrl && (
           <img
-            src={currentStory.mediaUrl}
+            src={resolveMediaUrl(currentStory.mediaUrl)}
             alt=""
             className="absolute inset-0 w-full h-full object-cover -z-[5]"
           />

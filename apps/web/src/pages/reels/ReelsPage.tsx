@@ -11,6 +11,7 @@ import { Avatar } from '../../components/ui/Avatar';
 import { VideoPlayer } from '../../components/post/VideoPlayer';
 import { ShareDialog } from '../../components/post/ShareDialog';
 import { useAuth } from '../../context/AuthContext';
+import { resolveMediaUrl } from '../../lib/resolveMediaUrl';
 import { api } from '../../services/api';
 import type { Post } from '../../types';
 
@@ -164,10 +165,10 @@ export const ReelsPage: React.FC<ReelsPageProps> = ({ onProfileClick, onCommentC
         {/* Post Image / Content */}
         {currentPost.mediaUrl ? (
           /\.(mp4|webm|ogg|mov|avi|mkv|quicktime)$/i.test(currentPost.mediaUrl) || currentPost.mediaUrl.includes('video') ? (
-            <VideoPlayer src={currentPost.mediaUrl} className="w-full h-full" autoPlay muted />
+            <VideoPlayer src={resolveMediaUrl(currentPost.mediaUrl)} className="w-full h-full" autoPlay muted />
           ) : (
             <img
-              src={currentPost.mediaUrl}
+              src={resolveMediaUrl(currentPost.mediaUrl)}
               alt={currentPost.content}
               className="w-full h-full object-cover"
               referrerPolicy="no-referrer"

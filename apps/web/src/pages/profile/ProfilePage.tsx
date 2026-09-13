@@ -16,6 +16,7 @@ import { Avatar } from '../../components/ui/Avatar';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { api } from '../../services/api';
+import { resolveMediaUrl } from '../../lib/resolveMediaUrl';
 import { uploadFile } from '../../lib/upload';
 import type { Profile, Post, Story } from '../../types';
 
@@ -170,7 +171,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
         {/* Gradient Banner */}
         <div className="h-32 sm:h-40 bg-gradient-to-r from-[#FF3366] via-[#FF6B6B] to-[#FFAA00] relative">
           {profile.bannerUrl && (
-            <img src={profile.bannerUrl} alt="" className="absolute inset-0 w-full h-full object-cover" referrerPolicy="no-referrer" />
+            <img src={resolveMediaUrl(profile.bannerUrl)} alt="" className="absolute inset-0 w-full h-full object-cover" referrerPolicy="no-referrer" />
           )}
           {isOwnProfile && (
             <>
@@ -375,7 +376,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                   >
                     {story.mediaUrl && (
                       <img
-                        src={story.mediaUrl}
+                        src={resolveMediaUrl(story.mediaUrl)}
                         alt="Story visual"
                         className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                         referrerPolicy="no-referrer"
