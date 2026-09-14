@@ -7,7 +7,6 @@ RUN npm ci
 
 COPY tsconfig.json ./
 COPY prisma ./prisma
-COPY prisma.config.ts ./
 COPY src ./src
 
 RUN npx prisma generate
@@ -19,6 +18,7 @@ WORKDIR /app
 
 COPY package*.json ./
 RUN npm ci --omit=dev
+RUN npm install prisma --save-dev
 
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/prisma ./prisma
