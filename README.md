@@ -331,5 +331,5 @@ This project is private and proprietary.
 ---
 
 <p align="center">
-  Built with care by the ENJ team.
+  Built with care by Murad Bzuneh.
 </p>
