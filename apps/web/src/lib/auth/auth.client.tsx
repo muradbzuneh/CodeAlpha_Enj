@@ -1,5 +1,5 @@
 import { createAuthClient } from "better-auth/react";
 
 export const authClient = createAuthClient({
-  baseURL: "http://localhost:4001",
+  baseURL: "https://enj-311bb18d292c.herokuapp.com",
 });
