@@ -9,8 +9,8 @@
   ],
   "scripts": {
     "dev": "tsx watch src/server.ts",
-    "start": "node dist/server.js",
-    "build": "tsc",
+    "start": "node apps/api/dist/server.js",
+    "build": "cd apps/api && npm install && npx prisma generate && npm run build",
     "dev:down": "docker compose down"
   }
 }
