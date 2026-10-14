@@ -8,8 +8,10 @@ const authHandler = toNodeHandler(auth);
 const ALLOWED_ORIGIN = process.env.FRONTEND_URL || "http://localhost:3000";
 
 function setCorsHeaders(res: import("http").ServerResponse, origin: string | undefined) {
-  if (origin === ALLOWED_ORIGIN) {
+  if (origin) {
     res.setHeader("Access-Control-Allow-Origin", origin);
+  } else {
+    res.setHeader("Access-Control-Allow-Origin", "*");
   }
   res.setHeader("Access-Control-Allow-Credentials", "true");
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, PATCH, PUT, DELETE, OPTIONS");
